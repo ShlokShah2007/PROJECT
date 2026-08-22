@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GlobeTrotter — Plan the whole trip, not just the flight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E2E2C;
+    --petrol:#123B39;
+    --petrol-2:#0A2624;
+    --sand:#F3ECDA;
+    --sand-2:#EAE0C7;
+    --paper:#FBF8F1;
+    --coral:#F0693F;
+    --coral-2:#D9552F;
+    --gold:#C9A25C;
+    --line: rgba(14,46,44,0.14);
+    --good:#3E7A5C;
+    --bad:#C24A3B;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+  ::selection{background:var(--coral);color:var(--paper);}
+
+  /* ---------- Reduced motion ---------- */
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    background:radial-gradient(120% 140% at 15% -10%, rgba(23,80,76,0.94) 0%, rgba(18,59,57,0.95) 45%, rgba(10,38,36,0.97) 100%), url('https://loremflickr.com/1600/900/travel,map,world') center/cover;
+    color:var(--sand);
+    position:relative;
+    overflow:hidden;
+    padding:28px 6vw 0;
+  }
+  .nav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 0 20px;
+    border-bottom:1px solid rgba(243,236,218,0.14);
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-size:1.25rem;font-weight:600;}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--coral);display:inline-block;}
+  .nav-links{display:flex;gap:28px;font-size:0.92rem;color:rgba(243,236,218,0.75);}
+  .nav-links a{text-decoration:none;transition:color .15s;}
+  .nav-links a:hover{color:var(--sand);}
+  .nav-cta{
+    background:var(--coral);color:var(--paper);border:none;padding:10px 18px;
+    border-radius:100px;font-size:0.88rem;font-weight:600;letter-spacing:.01em;
+  }
+  .nav-cta:hover{background:var(--coral-2);}
+
+  .hero-grid{
+    display:grid;grid-template-columns:1.05fr 0.95fr;gap:40px;
+    padding:64px 0 40px;align-items:center;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:0.75rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:18px;display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--gold);}
+  .hero h1{
+    font-size:clamp(2.6rem, 4.4vw, 4.1rem);
+    line-height:1.03;
+    color:var(--paper);
+  }
+  .hero h1 em{font-style:italic;color:var(--coral);font-weight:500;}
+  .hero p.sub{
+    margin-top:22px;font-size:1.08rem;line-height:1.6;color:rgba(243,236,218,0.8);max-width:46ch;
+  }
+  .hero-actions{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap;}
+  .btn-primary{
+    background:var(--coral);color:var(--paper);border:none;padding:15px 26px;border-radius:100px;
+    font-weight:600;font-size:0.95rem;box-shadow:0 10px 24px -8px rgba(240,105,63,0.55);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 28px -8px rgba(240,105,63,0.65);}
+  .btn-ghost{
+    background:transparent;color:var(--sand);border:1px solid rgba(243,236,218,0.35);padding:15px 24px;border-radius:100px;
+    font-weight:500;font-size:0.95rem;transition:border-color .15s, background .15s;
+  }
+  .btn-ghost:hover{border-color:var(--sand);background:rgba(243,236,218,0.06);}
+
+  .stat-row{display:flex;gap:34px;margin-top:44px;padding-top:26px;border-top:1px solid rgba(243,236,218,0.14);}
+  .stat-row .stat b{display:block;font-family:'Fraunces',serif;font-size:1.5rem;color:var(--paper);}
+  .stat-row .stat span{font-size:0.78rem;color:rgba(243,236,218,0.6);letter-spacing:.03em;}
+
+  /* signature route-map visual */
+  .route-wrap{position:relative;height:460px;}
+  .route-card{
+    position:absolute;inset:0;border-radius:22px;
+    background:linear-gradient(160deg, rgba(243,236,218,0.07), rgba(243,236,218,0.02));
+    border:1px solid rgba(243,236,218,0.16);
+    overflow:hidden;
+  }
+  .route-card svg{width:100%;height:100%;}
+  .route-path{
+    fill:none;stroke:var(--coral);stroke-width:2;stroke-dasharray:6 7;stroke-linecap:round;
+    stroke-dashoffset:1000;stroke-dasharray:1000;
+    animation:draw 2.6s ease forwards .3s;
+  }
+  @keyframes draw{to{stroke-dashoffset:0;}}
+  .route-node{fill:var(--sand);stroke:var(--petrol-2);stroke-width:3;}
+  .route-node.active{fill:var(--coral);}
+  .route-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;fill:rgba(243,236,218,0.82);
+  }
+  .route-pill{
+    position:absolute;bottom:20px;left:20px;right:20px;
+    background:rgba(14,46,44,0.72);backdrop-filter:blur(6px);
+    border:1px solid rgba(243,236,218,0.15);border-radius:14px;padding:14px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .route-pill .r1{font-size:0.8rem;color:rgba(243,236,218,0.65);}
+  .route-pill .r2{font-family:'Fraunces',serif;font-size:1rem;color:var(--paper);margin-top:2px;}
+  .badge-live{
+    font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--sand);
+    background:rgba(240,105,63,0.22);border:1px solid rgba(240,105,63,0.5);
+    padding:5px 10px;border-radius:100px;
+  }
+
+  @media (max-width: 880px){
+    .hero-grid{grid-template-columns:1fr;}
+    .route-wrap{height:320px;}
+    .nav-links{display:none;}
+    .stat-row{flex-wrap:wrap;row-gap:16px;}
+  }
+
+  /* ---------- SECTION WRAPPERS ---------- */
+  section.band{padding:88px 6vw;}
+  .band-head{max-width:640px;margin-bottom:48px;}
+  .band-head .eyebrow{color:var(--coral-2);}
+  .band-head .eyebrow::before{background:var(--coral-2);}
+  .band-head h2{font-size:clamp(1.8rem,2.8vw,2.5rem);color:var(--ink);}
+  .band-head p{margin-top:14px;color:#4B5A57;line-height:1.6;font-size:1.02rem;}
+
+  /* feature strip */
+  .feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden;}
+  .feat{background:var(--sand);padding:28px 24px;}
+  .feat .n{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--coral-2);letter-spacing:.06em;}
+  .feat h3{font-size:1.05rem;margin-top:10px;color:var(--ink);}
+  .feat p{font-size:0.9rem;color:#5A6B67;margin-top:8px;line-height:1.5;}
+  @media (max-width:880px){.feat-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:560px){.feat-grid{grid-template-columns:1fr;}}
+
+  /* ---------- APP SHELL ---------- */
+  #app{background:var(--sand);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .app-shell{
+    display:grid;grid-template-columns:230px 1fr;min-height:640px;
+  }
+  .app-side{
+    background:var(--petrol);color:var(--sand);padding:26px 16px;
+  }
+  .app-brand{display:flex;align-items:center;gap:9px;padding:0 10px 22px;font-family:'Fraunces',serif;font-size:1.1rem;}
+  .app-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--coral);}
+  .app-nav button{
+    display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;
+    color:rgba(243,236,218,0.68);padding:11px 12px;border-radius:10px;font-size:0.88rem;margin-bottom:2px;
+    transition:background .15s, color .15s;
+  }
+  .app-nav button .ic{width:16px;text-align:center;font-size:0.9rem;}
+  .app-nav button:hover{background:rgba(243,236,218,0.06);color:var(--sand);}
+  .app-nav button.active{background:rgba(240,105,63,0.16);color:var(--sand);font-weight:600;}
+  .app-side-foot{margin-top:26px;padding:14px 12px;border-top:1px solid rgba(243,236,218,0.14);font-size:0.76rem;color:rgba(243,236,218,0.5);line-height:1.5;}
+
+  .app-main{padding:30px 34px 50px;overflow:hidden;}
+  .app-topbar{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:24px;flex-wrap:wrap;gap:10px;}
+  .app-topbar h2{font-size:1.5rem;}
+  .app-topbar .meta{font-size:0.85rem;color:#5A6B67;}
+  .trip-name-input{
+    font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;border:none;background:transparent;
+    color:var(--ink);border-bottom:1px dashed transparent;padding:0;width:100%;max-width:480px;
+  }
+  .trip-name-input:hover, .trip-name-input:focus{border-bottom-color:var(--coral);outline:none;}
+
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media(max-width:1000px){.grid3{grid-template-columns:1fr 1fr;} .app-shell{grid-template-columns:1fr;} .app-side{display:flex;overflow-x:auto;gap:4px;padding:14px;} .app-brand{display:none;} .app-nav{display:flex;gap:4px;} .app-nav button{white-space:nowrap;width:auto;}}
+  @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+  .stat-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;}
+  .stat-card .lbl{font-size:0.78rem;color:#6A7A76;letter-spacing:.02em;}
+  .stat-card .val{font-family:'Fraunces',serif;font-size:1.7rem;margin-top:6px;}
+  .stat-card .sub{font-size:0.78rem;color:var(--good);margin-top:4px;}
+
+  .section-title{font-size:0.95rem;font-weight:600;color:var(--ink);margin:30px 0 14px;display:flex;align-items:center;justify-content:space-between;}
+  .section-title .tag{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:#7A887F;font-weight:400;}
+
+  /* city cards */
+  .city-card{
+    background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .city-swatch{
+    height:86px;border-radius:10px;position:relative;overflow:hidden;
+    display:flex;align-items:flex-end;padding:10px;color:#fff;
+  }
+  .city-swatch .cname{font-family:'Fraunces',serif;font-weight:600;font-size:1.02rem;position:relative;z-index:1;}
+  .city-swatch::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.45));}
+  .city-meta{display:flex;justify-content:space-between;font-size:0.78rem;color:#6A7A76;}
+  .city-meta b{color:var(--ink);}
+  .add-btn{
+    background:var(--ink);color:var(--sand);border:none;padding:9px 12px;border-radius:9px;font-size:0.82rem;font-weight:600;
+    display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s;
+  }
+  .add-btn:hover{background:var(--coral-2);}
+  .add-btn.added{background:var(--good);}
+  .filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .chip{
+    border:1px solid var(--line);background:var(--paper);padding:7px 13px;border-radius:100px;font-size:0.8rem;
+    color:#4B5A57;transition:all .15s;
+  }
+  .chip.active{background:var(--ink);color:var(--sand);border-color:var(--ink);}
+  .searchbar{
+    display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);
+    border-radius:11px;padding:10px 14px;margin-bottom:16px;max-width:420px;
+  }
+  .searchbar input{border:none;outline:none;background:none;font-size:0.9rem;width:100%;color:var(--ink);font-family:inherit;}
+
+  /* world map */
+  .wm-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line);}
+  .wm-legend{display:flex;gap:16px;font-size:0.76rem;color:#6A7A76;}
+  .wm-legend span{display:flex;align-items:center;gap:6px;}
+  .wm-legend i{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .wm-map-wrap{background:var(--petrol);position:relative;}
+  .wm-map-wrap .wm-bg-tint{fill:var(--petrol);opacity:0.62;}
+  .wm-map-wrap svg{width:100%;height:auto;display:block;}
+  .wm-hint{padding:12px 18px;font-size:0.76rem;color:#6A7A76;background:var(--paper);}
+
+  /* ---------- 3D globe ---------- */
+  .globe-card{background:var(--petrol);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;margin-bottom:22px;}
+  .globe-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:16px 18px;border-bottom:1px solid rgba(243,236,218,0.12);}
+  .globe-head h3{color:var(--sand);font-size:1.05rem;}
+  .globe-head .meta{color:rgba(243,236,218,0.6);font-size:0.8rem;margin-top:2px;}
+  .globe-stage{position:relative;height:460px;background:radial-gradient(120% 120% at 50% 20%, #16504c 0%, #0A2624 75%);touch-action:none;}
+  .globe-stage canvas{display:block;width:100%;height:100%;cursor:grab;}
+  .globe-stage canvas:active{cursor:grabbing;}
+  .globe-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(243,236,218,0.55);font-size:0.85rem;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;}
+  .globe-hint{position:absolute;left:18px;bottom:14px;font-size:0.72rem;color:rgba(243,236,218,0.55);font-family:'IBM Plex Mono',monospace;letter-spacing:.03em;pointer-events:none;}
+  .globe-panel{
+    position:absolute;top:16px;right:16px;background:rgba(11,38,36,0.92);backdrop-filter:blur(6px);
+    border:1px solid rgba(243,236,218,0.18);border-radius:14px;padding:16px 18px;min-width:220px;max-width:260px;
+    color:var(--sand);display:none;box-shadow:0 20px 40px -14px rgba(0,0,0,0.5);
+  }
+  .globe-panel.show{display:block;}
+  .globe-panel .gp-close{position:absolute;top:8px;right:10px;background:none;border:none;color:rgba(243,236,218,0.5);font-size:0.9rem;padding:2px 6px;}
+  .globe-panel .gp-close:hover{color:var(--sand);}
+  .globe-panel h4{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;margin-bottom:2px;}
+  .globe-panel .gp-country{font-size:0.76rem;color:rgba(243,236,218,0.6);margin-bottom:12px;}
+  .globe-panel .gp-row{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-top:1px solid rgba(243,236,218,0.1);}
+  .globe-panel .gp-row .gp-lbl{font-size:0.72rem;color:rgba(243,236,218,0.55);text-transform:uppercase;letter-spacing:.05em;}
+  .globe-panel .gp-row .gp-val{font-family:'IBM Plex Mono',monospace;font-size:0.92rem;color:var(--gold);}
+  .globe-panel .gp-btn{margin-top:12px;width:100%;background:var(--coral);color:var(--paper);border:none;padding:9px;border-radius:100px;font-size:0.8rem;font-weight:600;}
+  .globe-panel .gp-btn:hover{background:var(--coral-2);}
+  .globe-panel .gp-note{margin-top:10px;font-size:0.68rem;color:rgba(243,236,218,0.45);line-height:1.4;}
+  .globe-toggle{display:flex;gap:6px;background:rgba(243,236,218,0.1);border-radius:100px;padding:3px;}
+  .globe-toggle button{background:none;border:none;color:rgba(243,236,218,0.65);font-size:0.78rem;font-weight:600;padding:7px 14px;border-radius:100px;}
+  .globe-toggle button.active{background:var(--coral);color:var(--paper);}
+
+  /* ---------- Globe search ---------- */
+  .globe-search{position:relative;padding:0 18px 14px;}
+  .globe-search-box{position:relative;display:flex;align-items:center;}
+  .globe-search-box .gs-ic{position:absolute;left:12px;color:rgba(243,236,218,0.45);font-size:0.85rem;pointer-events:none;}
+  .globe-search input{
+    width:100%;background:rgba(243,236,218,0.08);border:1px solid rgba(243,236,218,0.18);border-radius:10px;
+    padding:10px 14px 10px 34px;font-size:0.85rem;font-family:inherit;color:var(--sand);
+  }
+  .globe-search input::placeholder{color:rgba(243,236,218,0.4);}
+  .globe-search input:focus{outline:none;border-color:var(--gold);background:rgba(243,236,218,0.12);}
+  .globe-search-results{
+    position:absolute;left:18px;right:18px;top:calc(100% - 8px);background:var(--paper);border:1px solid var(--line);
+    border-radius:12px;padding:6px;box-shadow:0 20px 40px -12px rgba(0,0,0,0.5);display:none;z-index:40;max-height:260px;overflow-y:auto;
+  }
+  .globe-search-results.show{display:block;}
+  .gsr-item{width:100%;display:flex;align-items:center;gap:9px;text-align:left;background:none;border:none;padding:9px 10px;border-radius:8px;font-size:0.85rem;color:var(--ink);}
+  .gsr-item:hover{background:var(--sand-2);}
+  .gsr-item .gsr-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .gsr-item .gsr-sub{color:#8A968F;font-size:0.76rem;margin-left:auto;}
+  .gsr-empty{padding:10px;font-size:0.8rem;color:#8A968F;}
+
+  /* ---------- Google auth ---------- */
+  .btn-google{
+    width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+    background:#fff;border:1px solid #DADCE0;color:#3C4043;border-radius:9px;padding:11px;
+    font-size:0.88rem;font-weight:600;font-family:'IBM Plex Sans',sans-serif;transition:box-shadow .15s, background .15s;
+  }
+  .btn-google:hover{background:#F7F8F8;box-shadow:0 1px 3px rgba(60,64,67,0.3);}
+  .btn-google svg{flex-shrink:0;}
+  .auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:#9AA6A0;font-size:0.72rem;text-transform:uppercase;letter-spacing:.06em;}
+  .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--line);}
+
+  /* ---------- Journal gallery ---------- */
+  .journal-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:18px;}
+  .journal-gallery figure{margin:0;border-radius:10px;overflow:hidden;background:var(--sand-2);aspect-ratio:4/3;position:relative;}
+  .journal-gallery img{width:100%;height:100%;object-fit:cover;display:block;}
+  .journal-gallery figcaption{position:absolute;left:0;right:0;bottom:0;padding:6px 9px;font-size:0.68rem;color:var(--paper);
+    background:linear-gradient(0deg, rgba(14,46,44,0.75), transparent);}
+  .journal-gallery-empty{margin-top:14px;font-size:0.8rem;color:#8A968F;}
+  .wm-dot-land{fill:rgba(243,236,218,0.16);}
+  .wm-grat{stroke:rgba(243,236,218,0.08);stroke-width:1;}
+  .wm-city-other{fill:var(--gold);cursor:pointer;}
+  .wm-city-other:hover{fill:var(--sand);}
+  .wm-city-stop{fill:var(--coral);stroke:var(--paper);stroke-width:1.5;cursor:pointer;}
+  .wm-city-label{font-family:'IBM Plex Mono',monospace;font-size:9px;fill:rgba(243,236,218,0.85);pointer-events:none;}
+  .wm-route{fill:none;stroke:var(--coral);stroke-width:1.4;stroke-dasharray:4 4;opacity:0.85;}
+  .wm-user{fill:#2F6FED;stroke:#fff;stroke-width:2;}
+  .wm-user-pulse{fill:none;stroke:#2F6FED;stroke-width:2;opacity:0.6;animation:wmPulse 2.2s ease-out infinite;}
+  @keyframes wmPulse{0%{r:6;opacity:0.7;}100%{r:22;opacity:0;}}
+
+  .clock-row{display:flex;align-items:center;gap:14px;padding:13px 4px;border-bottom:1px solid var(--line);}
+  .clock-row:last-child{border-bottom:none;}
+  .clock-row .cdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .clock-row .cname{flex:1;font-family:'Fraunces',serif;font-size:0.95rem;}
+  .clock-row .ctime{font-family:'IBM Plex Mono',monospace;font-size:1rem;color:var(--ink);min-width:78px;}
+  .clock-row .cgolden{font-size:0.76rem;color:var(--coral-2);min-width:150px;text-align:right;}
+  .clock-row .cbadge{font-size:0.7rem;padding:3px 8px;border-radius:100px;background:var(--sand-2);color:#5A6B67;}
+
+  .serendipity-empty{font-size:0.86rem;color:#6A7A76;line-height:1.6;}
+  .serendipity-pick{display:flex;align-items:center;gap:16px;}
+  .serendipity-pick .sw{width:64px;height:64px;border-radius:12px;flex-shrink:0;background-size:cover;background-position:center;}
+  .serendipity-pick .txt{flex:1;}
+  .serendipity-pick .txt b{font-family:'Fraunces',serif;font-size:1.05rem;}
+  .serendipity-pick .txt p{font-size:0.84rem;color:#5A6B67;margin:4px 0 0;line-height:1.5;}
+
+  .nearyou-row{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:0.88rem;}
+  .nearyou-row:last-child{border-bottom:none;}
+  .nearyou-row .nn{flex:1;}
+  .nearyou-row .nd{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:#6A7A76;}
+
+  /* jet lag */
+  .jl-leg{padding:12px 4px;border-bottom:1px solid var(--line);}
+  .jl-leg:last-child{border-bottom:none;}
+  .jl-leg-head{display:flex;justify-content:space-between;align-items:baseline;font-size:0.88rem;margin-bottom:8px;}
+  .jl-leg-head b{font-family:'Fraunces',serif;font-weight:600;}
+  .jl-bar-track{height:8px;border-radius:100px;background:var(--sand-2);overflow:hidden;position:relative;}
+  .jl-bar-fill{height:100%;border-radius:100px;}
+  .jl-tip{font-size:0.78rem;color:#6A7A76;margin-top:6px;}
+
+  /* carbon */
+  .cb-leg{display:flex;justify-content:space-between;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line);font-size:0.86rem;}
+  .cb-leg:last-child{border-bottom:none;}
+  .cb-leg .km{font-family:'IBM Plex Mono',monospace;color:#6A7A76;}
+  .cb-total{display:flex;justify-content:space-between;align-items:center;padding-top:14px;margin-top:6px;border-top:1px solid var(--line);}
+  .cb-total b{font-family:'Fraunces',serif;font-size:1.3rem;}
+  .cb-note{font-size:0.78rem;color:#8A968F;margin-top:8px;line-height:1.5;}
+
+  /* route optimizer */
+  .ro-stat-row{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:14px;}
+  .ro-stat{flex:1;min-width:130px;}
+  .ro-stat .lbl{font-size:0.76rem;color:#6A7A76;}
+  .ro-stat .val{font-family:'Fraunces',serif;font-size:1.35rem;margin-top:2px;}
+  .ro-order{font-size:0.86rem;color:var(--ink);line-height:1.7;margin-bottom:12px;}
+  .ro-order .arrow{color:var(--coral-2);margin:0 4px;}
+
+  /* stops / itinerary */
+  .stop{
+    background:var(--paper);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden;
+  }
+  .stop-head{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;}
+  .stop-num{
+    width:30px;height:30px;border-radius:50%;background:var(--sand-2);color:var(--ink);font-family:'IBM Plex Mono',monospace;
+    display:flex;align-items:center;justify-content:center;font-size:0.82rem;flex-shrink:0;
+  }
+  .stop-info{flex:1;min-width:0;}
+  .stop-info .sname{font-family:'Fraunces',serif;font-size:1.05rem;}
+  .stop-info .sdates{font-size:0.78rem;color:#6A7A76;margin-top:2px;}
+  .stop-actions{display:flex;gap:6px;align-items:center;}
+  .icon-btn{
+    background:none;border:1px solid var(--line);width:30px;height:30px;border-radius:8px;font-size:0.8rem;color:#5A6B67;
+    display:flex;align-items:center;justify-content:center;transition:background .15s;
+  }
+  .icon-btn:hover{background:var(--sand-2);}
+  .icon-btn.danger:hover{background:#F6DCD5;color:var(--bad);border-color:#EABBB0;}
+  .stop-body{border-top:1px solid var(--line);padding:16px 18px;display:none;}
+  .stop-body.open{display:block;}
+  .date-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .date-field{display:flex;flex-direction:column;gap:4px;}
+  .date-field label{font-size:0.72rem;color:#7A887F;text-transform:uppercase;letter-spacing:.04em;}
+  .date-field input{border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:0.84rem;font-family:inherit;background:var(--paper);color:var(--ink);}
+  .act-row{
+    display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--sand);border-radius:9px;margin-bottom:7px;
+  }
+  .act-row .an{font-size:0.87rem;}
+  .act-row .ac{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:#5A6B67;display:flex;align-items:center;gap:10px;}
+  .act-add-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .mini-select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:0.82rem;background:var(--paper);color:var(--ink);font-family:inherit;flex:1;min-width:160px;}
+  .mini-btn{background:var(--coral);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:0.82rem;font-weight:600;}
+  .empty-note{font-size:0.82rem;color:#8A968F;padding:10px 0;}
+
+  /* budget */
+  .budget-total{display:flex;align-items:baseline;gap:10px;margin-bottom:6px;}
+  .budget-total .amt{font-family:'Fraunces',serif;font-size:2.3rem;}
+  .budget-total .cap{font-size:0.85rem;color:#6A7A76;}
+  .bar-row{margin-bottom:16px;}
+  .bar-row .bh{display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:6px;}
+  .bar-track{height:9px;background:var(--sand-2);border-radius:100px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:100px;}
+  .alert{
+    margin-top:16px;padding:12px 14px;border-radius:10px;font-size:0.85rem;display:flex;gap:10px;align-items:flex-start;
+  }
+  .alert.warn{background:#FBEAE3;color:#9A3D25;border:1px solid #F2C4AE;}
+  .alert.ok{background:#E7F1EA;color:#2E5C43;border:1px solid #C4E0CE;}
+  .cap-input{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:0.85rem;width:120px;font-family:inherit;background:var(--paper);color:var(--ink);}
+
+  /* calendar */
+  .day{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);}
+  .day:last-child{border-bottom:none;}
+  .day-date{width:96px;flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:#6A7A76;padding-top:2px;}
+  .day-date b{display:block;color:var(--ink);font-size:0.95rem;font-family:'Fraunces',serif;}
+  .day-events{flex:1;display:flex;flex-direction:column;gap:6px;}
+  .day-city-tag{
+    display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:600;color:var(--coral-2);margin-bottom:2px;
+  }
+  .day-act{font-size:0.87rem;color:#3F4E4A;padding-left:14px;position:relative;}
+  .day-act::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--gold);}
+
+  /* share */
+  .share-toggle-row{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+  .switch{position:relative;width:44px;height:24px;background:var(--sand-2);border-radius:100px;border:1px solid var(--line);flex-shrink:0;transition:background .15s;}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,0.25);}
+  .switch.on{background:var(--good);}
+  .switch.on::after{transform:translateX(20px);}
+  .link-row{display:flex;gap:10px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;max-width:480px;}
+  .link-row .mono{flex:1;font-size:0.84rem;color:#4B5A57;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .copy-btn{background:var(--ink);color:var(--sand);border:none;padding:8px 13px;border-radius:8px;font-size:0.8rem;font-weight:600;flex-shrink:0;}
+  .public-preview{margin-top:22px;}
+  .public-hero{background:var(--petrol);color:var(--sand);border-radius:14px;padding:26px;margin-bottom:16px;}
+  .public-hero h3{font-family:'Fraunces',serif;font-size:1.4rem;color:var(--paper);}
+  .public-hero p{font-size:0.85rem;color:rgba(243,236,218,0.7);margin-top:6px;}
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--sand);padding:11px 20px;border-radius:100px;font-size:0.85rem;
+    opacity:0;pointer-events:none;transition:all .25s ease;z-index:50;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* footer */
+  footer{background:var(--petrol-2);color:rgba(243,236,218,0.55);padding:40px 6vw;font-size:0.82rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  footer .brand{color:var(--sand);}
+
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:100px;}
+
+  /* ---------- AUTH / LOGIN ---------- */
+  .login-btn-nav{background:transparent;color:var(--sand);border:1px solid rgba(243,236,218,0.35);padding:9px 16px;border-radius:100px;font-size:0.85rem;font-weight:500;}
+  .login-btn-nav:hover{border-color:var(--sand);}
+  .auth-chip{display:flex;align-items:center;gap:8px;background:rgba(243,236,218,0.08);border:1px solid rgba(243,236,218,0.2);padding:6px 12px 6px 6px;border-radius:100px;position:relative;}
+  .auth-avatar{width:26px;height:26px;border-radius:50%;background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.76rem;font-weight:600;font-family:'Fraunces',serif;flex-shrink:0;}
+  .auth-name{font-size:0.84rem;color:var(--sand);}
+  .auth-caret{font-size:0.62rem;color:rgba(243,236,218,0.55);}
+  .auth-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:6px;min-width:150px;box-shadow:0 14px 30px -10px rgba(0,0,0,0.4);display:none;z-index:70;}
+  .auth-dropdown.open{display:block;}
+  .auth-dropdown button{width:100%;text-align:left;background:none;border:none;padding:9px 10px;border-radius:8px;font-size:0.84rem;color:var(--ink);}
+  .auth-dropdown button:hover{background:var(--sand-2);}
+
+  .login-overlay{
+    position:fixed;inset:0;background:radial-gradient(120% 140% at 15% -10%, #17504C 0%, var(--petrol) 45%, var(--petrol-2) 100%);
+    display:none;align-items:center;justify-content:center;z-index:200;padding:24px;
+  }
+  .login-overlay.open{display:flex;}
+  .login-card{background:var(--paper);border-radius:20px;padding:38px 34px 30px;max-width:400px;width:100%;position:relative;box-shadow:0 30px 70px -20px rgba(0,0,0,0.55);}
+  .login-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#6A7A76;font-size:0.9rem;border:none;background:none;}
+  .login-close:hover{background:var(--sand-2);}
+  .login-card h2{font-size:1.45rem;color:var(--ink);}
+  .login-sub{font-size:0.86rem;color:#5A6B67;margin-top:8px;line-height:1.5;}
+  .login-tabs{display:flex;gap:6px;background:var(--sand);border-radius:100px;padding:4px;margin:22px 0 20px;}
+  .login-tab{flex:1;background:none;border:none;padding:9px;border-radius:100px;font-size:0.83rem;font-weight:600;color:#6A7A76;}
+  .login-tab.active{background:var(--ink);color:var(--sand);}
+  .form-field{margin-bottom:14px;display:flex;flex-direction:column;gap:5px;}
+  .form-field label{font-size:0.72rem;color:#7A887F;text-transform:uppercase;letter-spacing:.04em;}
+  .form-field input{border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:0.9rem;font-family:inherit;background:var(--paper);color:var(--ink);width:100%;}
+  .form-field input:focus{outline:none;border-color:var(--coral);}
+  .form-err{font-size:0.78rem;color:var(--bad);margin:-6px 0 12px;min-height:1em;}
+  .login-foot{font-size:0.74rem;color:#8A968F;margin-top:16px;text-align:center;line-height:1.5;}
+
+  /* ---------- FAVORITES ---------- */
+  .city-swatch{position:relative;}
+  .fav-heart{
+    position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(14,46,44,0.4);
+    border:none;color:rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;font-size:1rem;z-index:2;transition:background .15s, transform .15s, color .15s;
+  }
+  .fav-heart:hover{transform:scale(1.08);}
+  .fav-heart.on{color:var(--coral);background:rgba(14,46,44,0.55);}
+
+  /* ---------- CHAT / AI ASSISTANT ---------- */
+  .chat-card{display:flex;flex-direction:column;height:540px;max-width:720px;padding:16px 18px;}
+  .chat-window{flex:1;overflow-y:auto;padding:6px 2px;display:flex;flex-direction:column;gap:12px;}
+  .chat-msg{display:flex;}
+  .chat-msg.user{justify-content:flex-end;}
+  .chat-msg .bubble{max-width:80%;padding:11px 14px;border-radius:14px;font-size:0.88rem;line-height:1.55;}
+  .chat-msg.user .bubble{background:var(--ink);color:var(--sand);border-bottom-right-radius:4px;}
+  .chat-msg.assistant .bubble{background:var(--sand);color:var(--ink);border-bottom-left-radius:4px;}
+  .bubble.typing{display:flex;gap:4px;padding:15px 16px;}
+  .bubble.typing span{width:6px;height:6px;border-radius:50%;background:#8A968F;display:inline-block;animation:typingBounce 1.1s infinite ease-in-out;}
+  .bubble.typing span:nth-child(2){animation-delay:.15s;}
+  .bubble.typing span:nth-child(3){animation-delay:.3s;}
+  @keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.5;}30%{transform:translateY(-4px);opacity:1;}}
+  .chat-suggest{display:flex;gap:8px;flex-wrap:wrap;padding:10px 2px 4px;}
+  .chat-input-row{display:flex;gap:10px;border-top:1px solid var(--line);padding-top:14px;margin-top:8px;}
+  .chat-input-row input{flex:1;border:1px solid var(--line);border-radius:100px;padding:11px 16px;font-size:0.88rem;font-family:inherit;background:var(--paper);color:var(--ink);}
+  .chat-input-row input:focus{outline:none;border-color:var(--coral);}
+
+  .fab{
+    position:fixed;bottom:26px;right:26px;width:56px;height:56px;border-radius:50%;background:var(--coral);color:#fff;
+    border:none;font-size:1.35rem;box-shadow:0 14px 28px -8px rgba(240,105,63,0.6);z-index:60;transition:transform .15s ease, box-shadow .15s ease;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .fab:hover{transform:scale(1.07);box-shadow:0 18px 34px -8px rgba(240,105,63,0.7);}
+  @media(max-width:640px){.chat-card{height:70vh;}}
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="nav">
+    <div class="brand"><span class="dot"></span>GlobeTrotter</div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#app">Plan a trip</a>
+      <a href="#share-section">Share</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div id="authArea"></div>
+      <button class="nav-cta" onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})">Open planner</button>
+    </div>
+  </div>
+
+  <div class="hero-grid">
+    <div>
+      <div class="eyebrow">Multi-city trip planning</div>
+      <h1>Design the trip<br>in the <em>order</em> you'll<br>actually live it.</h1>
+      <p class="sub">Stack cities, drop in activities, and watch your budget and calendar build themselves — one itinerary, priced and mapped as you go, ready to share the moment it's done.</p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})">Start building &nbsp;→</button>
+        <button class="btn-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See how it works</button>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><b>4</b><span>cities in demo trip</span></div>
+        <div class="stat"><b id="heroActCount">0</b><span>activities planned</span></div>
+        <div class="stat"><b id="heroBudget">$0</b><span>estimated total</span></div>
+      </div>
+    </div>
+
+    <div class="route-wrap">
+      <div class="route-card">
+        <span class="badge-live" style="position:absolute;top:16px;right:16px;">● live demo data</span>
+        <svg viewBox="0 0 420 460" preserveAspectRatio="xMidYMid meet">
+          <path class="route-path" d="M60,80 C120,60 150,140 90,190 C40,230 130,280 200,250 C270,220 260,320 340,360" />
+          <g class="route-node"><circle cx="60" cy="80" r="6"/></g>
+          <text class="route-label" x="72" y="76">Lisbon</text>
+          <g class="route-node"><circle cx="90" cy="190" r="6"/></g>
+          <text class="route-label" x="102" y="186">Marrakesh</text>
+          <g class="route-node active"><circle cx="200" cy="250" r="6"/></g>
+          <text class="route-label" x="212" y="246">Kyoto</text>
+          <g class="route-node"><circle cx="340" cy="360" r="6"/></g>
+          <text class="route-label" x="290" y="390">Queenstown</text>
+        </svg>
+      </div>
+      <div class="route-pill">
+        <div>
+          <div class="r1">Route · 4 stops</div>
+          <div class="r2">Lisbon → Marrakesh → Kyoto → Queenstown</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--gold);">21 days</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FEATURES ============ -->
+<section class="band" id="features">
+  <div class="band-head">
+    <div class="eyebrow">What's under the hood</div>
+    <h2>Everything a multi-stop trip needs, in one flow</h2>
+    <p>No spreadsheets, no ten open tabs. Add a city, it asks what you're doing there — then it prices it, dates it, and puts it on the calendar for you.</p>
+  </div>
+  <div class="feat-grid">
+    <div class="feat"><div class="n">Stops</div><h3>Ordered itinerary</h3><p>Add cities in the order you'll visit them, set arrival and departure dates, reorder anytime.</p></div>
+    <div class="feat"><div class="n">Activities</div><h3>Built into each stop</h3><p>Attach sightseeing, food, and adventure picks to a city — cost and duration come along with it.</p></div>
+    <div class="feat"><div class="n">Budget</div><h3>Priced automatically</h3><p>Stay, transport, activities, and meals roll up into a live total, with an alert if you're over budget.</p></div>
+    <div class="feat"><div class="n">Share</div><h3>One public link</h3><p>Flip a switch to publish a read-only version of the trip, ready to copy or send.</p></div>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<section id="app">
+  <div class="app-shell">
+    <div class="app-side">
+      <div class="app-brand"><span class="dot"></span>GlobeTrotter</div>
+      <div class="app-nav" id="appNav">
+        <button data-view="dashboard" class="active"><span class="ic">◐</span> Dashboard</button>
+        <button data-view="plan"><span class="ic">✧</span> Plan a trip</button>
+        <button data-view="discover"><span class="ic">⌕</span> Discover cities</button>
+        <button data-view="itinerary"><span class="ic">☰</span> Build itinerary</button>
+        <button data-view="budget"><span class="ic">$</span> Budget</button>
+        <button data-view="calendar"><span class="ic">▦</span> Calendar</button>
+        <button data-view="worldmap"><span class="ic">◍</span> World map</button>
+        <button data-view="packing"><span class="ic">⎘</span> Packing list</button>
+        <button data-view="journal"><span class="ic">✎</span> Journal</button>
+        <button data-view="favorites"><span class="ic">♥</span> Favorites</button>
+        <button data-view="assistant"><span class="ic">✦</span> AI Assistant</button>
+        <button data-view="profile"><span class="ic">◉</span> Profile</button>
+        <button data-view="share"><span class="ic">⇢</span> Share trip</button>
+      </div>
+      <div class="app-side-foot">This planner runs entirely in your browser — nothing you enter here leaves this tab.</div>
+    </div>
+
+    <div class="app-main">
+
+      <!-- DASHBOARD -->
+      <div class="view" id="view-dashboard">
+        <div class="app-topbar">
+          <div>
+            <input class="trip-name-input" id="tripNameInput" value="Kyoto &amp; Beyond">
+            <div class="meta" id="tripMeta"></div>
+          </div>
+        </div>
+        <div class="grid3" id="dashStats"></div>
+        <div class="section-title">Trip route <span class="tag">in visiting order</span></div>
+        <div class="card" id="dashRoute" style="display:flex;flex-direction:column;gap:0;"></div>
+      </div>
+
+      <!-- PLAN A TRIP -->
+      <div class="view" id="view-plan" style="display:none;">
+        <div class="app-topbar"><h2>Plan a new trip</h2><div class="meta">Answer a couple of questions, get an instant starting itinerary</div></div>
+        <div class="card" style="max-width:760px;">
+          <div class="section-title" style="margin-top:0;">What's the vibe?</div>
+          <div class="filter-row" id="wizVibe"></div>
+          <div class="section-title">How long is the trip?</div>
+          <div class="filter-row" id="wizLength"></div>
+          <div class="section-title">Preferred region <span class="tag">optional</span></div>
+          <div class="filter-row" id="wizRegion"></div>
+          <button class="btn-primary" style="margin-top:8px;" onclick="generatePlan()">Generate itinerary →</button>
+        </div>
+        <div id="wizResultWrap" style="margin-top:26px;display:none;">
+          <div class="section-title" style="margin-top:0;">Your starting itinerary <button class="mini-btn" style="background:var(--ink);" onclick="shufflePlan()">⟲ Shuffle</button></div>
+          <div class="grid3" id="wizResult"></div>
+          <button class="btn-primary" style="margin-top:18px;" onclick="useGeneratedPlan()">Use this plan →</button>
+        </div>
+      </div>
+
+      <!-- DISCOVER -->
+      <div class="view" id="view-discover" style="display:none;">
+        <div class="app-topbar"><h2>Discover cities</h2><div class="meta">Add a stop to the trip</div></div>
+        <div class="searchbar">
+          <span>⌕</span>
+          <input id="citySearch" placeholder="Search by city or country…">
+        </div>
+        <div class="filter-row" id="regionFilters"></div>
+        <div class="grid3" id="cityGrid"></div>
+      </div>
+
+      <!-- ITINERARY -->
+      <div class="view" id="view-itinerary" style="display:none;">
+        <div class="app-topbar"><h2>Build itinerary</h2><div class="meta">Set dates, then add activities to each stop</div></div>
+        <div id="stopsList"></div>
+        <div class="empty-note" id="itinEmpty" style="display:none;">No stops yet — head to <b>Discover cities</b> to add your first one.</div>
+      </div>
+
+      <!-- BUDGET -->
+      <div class="view" id="view-budget" style="display:none;">
+        <div class="app-topbar"><h2>Budget &amp; cost breakdown</h2><div class="meta">Updates as you edit the itinerary</div></div>
+        <div class="grid2">
+          <div class="card">
+            <div class="budget-total"><span class="amt" id="budgetTotal">$0</span><span class="cap">estimated total</span></div>
+            <div style="font-size:0.82rem;color:#6A7A76;margin-bottom:18px;">≈ <span id="budgetPerDay">$0</span> / day over <span id="budgetDays">0</span> days</div>
+            <div id="budgetBars"></div>
+            <div id="budgetAlert"></div>
+          </div>
+          <div class="card">
+            <div class="section-title" style="margin-top:0;">Set your budget cap</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+              <span class="mono" style="font-size:0.85rem;">$</span>
+              <input class="cap-input" id="capInput" type="number" value="3500" min="0" step="50">
+              <span style="font-size:0.82rem;color:#6A7A76;">total cap</span>
+            </div>
+            <div class="section-title" style="margin-top:0;">By stop</div>
+            <div id="budgetByStop"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALENDAR -->
+      <div class="view" id="view-calendar" style="display:none;">
+        <div class="app-topbar"><h2>Calendar / timeline</h2><div class="meta">Day-by-day view of the trip</div></div>
+        <div class="card" id="calendarBody"></div>
+      </div>
+
+      <!-- WORLD MAP -->
+      <div class="view" id="view-worldmap" style="display:none;">
+        <div class="app-topbar">
+          <h2>World map</h2>
+          <div class="meta">Your route, live world clocks, and what's near you right now</div>
+        </div>
+
+        <div class="globe-card">
+          <div class="globe-head">
+            <div>
+              <h3>Spin the globe</h3>
+              <div class="meta">Search a place, drag to rotate, or click a marker for distance &amp; estimated cost</div>
+            </div>
+            <button class="mini-btn" id="globeLocateBtn" style="background:var(--coral);" onclick="locateMe()">◎ Use my location</button>
+          </div>
+          <div class="globe-search" id="globeSearchWrap">
+            <div class="globe-search-box">
+              <span class="gs-ic">⌕</span>
+              <input type="text" id="globeSearchInput" placeholder="Search a place on the globe…" autocomplete="off"
+                oninput="onGlobeSearchInput(this.value)"
+                onfocus="onGlobeSearchInput(this.value)"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();onGlobeSearchEnter();} if(event.key==='Escape'){this.blur(); document.getElementById('globeSearchResults').classList.remove('show');}">
+            </div>
+            <div class="globe-search-results" id="globeSearchResults"></div>
+          </div>
+          <div class="globe-stage" id="globeStage">
+            <div class="globe-loading" id="globeLoading">Loading globe…</div>
+          </div>
+          <div class="globe-hint">Reference point: <span id="globeRefLabel">your first stop</span></div>
+          <div class="globe-panel" id="globePanel">
+            <button class="gp-close" onclick="closeGlobePanel()">✕</button>
+            <h4 id="gpName">—</h4>
+            <div class="gp-country" id="gpCountry">—</div>
+            <div class="gp-row"><span class="gp-lbl">Distance</span><span class="gp-val" id="gpDistance">—</span></div>
+            <div class="gp-row"><span class="gp-lbl">Est. flight cost</span><span class="gp-val" id="gpCost">—</span></div>
+            <button class="gp-btn" id="gpAddBtn" onclick="addCityFromGlobe()">Add to itinerary</button>
+            <div class="gp-note">Rough one-way economy estimate from your reference point — actual fares vary.</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div class="wm-toolbar">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="mini-btn" id="locateBtn" onclick="locateMe()">◎ Use my location</button>
+              <button class="mini-btn" style="background:var(--ink);" onclick="toggleMapRoute()"><span id="routeToggleLabel">Hide route line</span></button>
+            </div>
+            <div class="wm-legend">
+              <span><i style="background:var(--coral);"></i> trip stops</span>
+              <span><i style="background:var(--gold);"></i> other cities</span>
+              <span><i style="background:#2F6FED;"></i> you</span>
+            </div>
+          </div>
+          <div class="wm-map-wrap" id="wmMapWrap"></div>
+          <div class="wm-hint" id="wmHint">Tap any gold dot to add that city to your trip. Location is used only in this tab, on this device — nothing is uploaded.</div>
+        </div>
+
+        <div class="section-title">Right now, everywhere <span class="tag" id="rightNowClock"></span></div>
+        <div class="card" id="rightNowStrip" style="display:flex;flex-direction:column;gap:0;"></div>
+
+        <div class="section-title">Stopover Serendipity <span class="tag">an original GlobeTrotter idea</span></div>
+        <div class="card" id="serendipityCard"></div>
+
+        <div class="section-title">Nearest to you</div>
+        <div class="card" id="nearYouCard"></div>
+
+        <div class="section-title">Jet Lag Planner <span class="tag">recovery days between stops</span></div>
+        <div class="card" id="jetlagCard"></div>
+
+        <div class="section-title">Carbon &amp; Distance <span class="tag">rough per-leg estimate</span></div>
+        <div class="card" id="carbonCard"></div>
+
+        <div class="section-title">Smarter Order <span class="tag">same cities, shorter route</span></div>
+        <div class="card" id="routeOptCard"></div>
+      </div>
+
+      <!-- PACKING LIST -->
+      <div class="view" id="view-packing" style="display:none;">
+        <div class="app-topbar"><h2>Packing checklist</h2><div class="meta" id="packMeta"></div></div>
+        <div class="card" style="max-width:560px;">
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <input id="packInput" placeholder="Add an item…" class="mini-select" style="border-radius:100px;flex:1;min-width:0;" onkeydown="if(event.key==='Enter'){event.preventDefault();addPackingItem();}">
+            <button class="mini-btn" onclick="addPackingItem()">Add</button>
+          </div>
+          <div id="packList"></div>
+        </div>
+      </div>
+
+      <!-- JOURNAL -->
+      <div class="view" id="view-journal" style="display:none;">
+        <div class="app-topbar"><h2>Trip journal</h2><div class="meta">Notes, ideas, and things not to forget</div></div>
+        <div class="card" style="max-width:680px;">
+          <textarea id="journalArea" placeholder="Write anything about this trip — bookings to confirm, restaurant names a friend recommended, gift ideas for while you're there…" style="width:100%;min-height:340px;border:1px solid var(--line);border-radius:12px;padding:16px;font-family:inherit;font-size:0.9rem;color:var(--ink);background:var(--paper);resize:vertical;" oninput="state.journalText=this.value;"></textarea>
+          <div style="font-size:0.78rem;color:#8A968F;margin-top:10px;">Saved automatically for this session.</div>
+          <div class="section-title" style="margin-top:24px;">Snapshots from your stops</div>
+          <div class="journal-gallery" id="journalGallery"></div>
+        </div>
+      </div>
+
+      <!-- SHARE -->
+      <div class="view" id="view-share" style="display:none;">
+        <div class="app-topbar"><h2>Share this trip</h2><div class="meta">Publish a read-only version</div></div>
+        <div class="card" style="max-width:640px;">
+          <div class="share-toggle-row">
+            <div class="switch" id="shareSwitch" onclick="toggleShare()"></div>
+            <div>
+              <div style="font-weight:600;font-size:0.92rem;" id="shareStateLabel">Trip is private</div>
+              <div style="font-size:0.82rem;color:#6A7A76;">Anyone with the link can view — no editing.</div>
+            </div>
+          </div>
+          <div id="shareLinkArea" style="display:none;">
+            <div class="link-row">
+              <span class="mono" id="shareLink">globetrotter.app/t/kyoto-beyond-x7q2</span>
+              <button class="copy-btn" onclick="copyLink()">Copy link</button>
+            </div>
+          </div>
+        </div>
+        <div class="public-preview card" id="publicPreview" style="display:none;max-width:640px;margin-top:16px;">
+          <div class="public-hero">
+            <div style="font-size:0.75rem;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Public preview</div>
+            <h3 id="pubTitle">Kyoto &amp; Beyond</h3>
+            <p id="pubMeta">4 stops · 21 days</p>
+          </div>
+          <div id="pubStops"></div>
+          <div style="margin-top:14px;font-size:0.8rem;color:#8A968F;">Read-only — visitors see the route, dates, and activities, not your budget cap.</div>
+        </div>
+      </div>
+
+      <!-- FAVORITES -->
+      <div class="view" id="view-favorites" style="display:none;">
+        <div class="app-topbar"><h2>Favorite places</h2><div class="meta">Cities you've starred to consider later</div></div>
+        <div class="grid3" id="favGrid"></div>
+        <div class="empty-note" id="favEmpty" style="display:none;">No favorites yet — head to <b>Discover cities</b> and tap the ♥ on any city to save it here.</div>
+      </div>
+
+      <!-- AI ASSISTANT -->
+      <div class="view" id="view-assistant" style="display:none;">
+        <div class="app-topbar"><h2>AI trip assistant</h2><div class="meta">Ask about your itinerary, budget, or ideas for a stop</div></div>
+        <div class="card chat-card">
+          <div class="chat-window" id="chatWindow"></div>
+          <div class="chat-suggest" id="chatSuggest"></div>
+          <div class="chat-input-row">
+            <input id="chatInput" placeholder="Ask about your trip…" onkeydown="if(event.key==='Enter'){event.preventDefault();sendChat();}">
+            <button class="mini-btn" onclick="sendChat()">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="view" id="view-profile" style="display:none;">
+        <div class="app-topbar"><h2>Profile</h2><div class="meta">Your GlobeTrotter account</div></div>
+        <div class="card" style="max-width:520px;">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px;">
+            <div class="auth-avatar" style="width:56px;height:56px;font-size:1.3rem;" id="profileAvatar"></div>
+            <div>
+              <div style="font-family:'Fraunces',serif;font-size:1.2rem;" id="profileName"></div>
+              <div style="font-size:0.82rem;color:#6A7A76;" id="profileEmail"></div>
+            </div>
+          </div>
+          <div class="grid3" style="margin-bottom:24px;">
+            <div class="stat-card"><div class="lbl">Trip stops</div><div class="val" id="profStops">0</div></div>
+            <div class="stat-card"><div class="lbl">Favorites</div><div class="val" id="profFavs">0</div></div>
+            <div class="stat-card"><div class="lbl">Assistant chats</div><div class="val" id="profChats">0</div></div>
+          </div>
+          <div class="form-field"><label>Display name</label><input type="text" id="profileNameInput"></div>
+          <button class="add-btn" onclick="saveProfileName()">Save name</button>
+          <button class="btn-ghost" style="margin-top:20px;border-color:var(--line);color:var(--ink);" onclick="logout()">Log out</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div id="share-section"></div>
+<footer>
+  <div class="brand">GlobeTrotter</div>
+  <div>A concept trip planner · built from the GlobeTrotter product brief</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<button class="fab" id="chatFab" onclick="openAssistant()" title="Ask the AI trip assistant">✦</button>
+
+<!-- ============ LOGIN OVERLAY ============ -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <button class="login-close" onclick="closeLogin()">✕</button>
+    <div class="brand" style="margin-bottom:20px;color:var(--ink);"><span class="dot"></span>GlobeTrotter</div>
+    <h2 id="loginHeading">Welcome back</h2>
+    <p class="login-sub" id="loginSub">Log in to save favorite places and chat with your trip assistant.</p>
+    <div class="login-tabs">
+      <button type="button" class="login-tab active" data-mode="login" onclick="setAuthMode('login')">Log in</button>
+      <button type="button" class="login-tab" data-mode="signup" onclick="setAuthMode('signup')">Sign up</button>
+    </div>
+    <button type="button" class="btn-google" onclick="continueWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18">
+        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.56 2.7-3.86 2.7-6.62z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.83.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.94v2.33A9 9 0 0 0 9 18z"/>
+        <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.16.28-1.7V4.97H.94A9 9 0 0 0 0 9c0 1.45.35 2.83.94 4.03z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .94 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"/>
+      </svg>
+      Continue with Google
+    </button>
+    <div class="auth-divider">or use email</div>
+    <form id="authForm" onsubmit="handleAuth(event)">
+      <div class="form-field" id="nameField" style="display:none;">
+        <label>Name</label>
+        <input type="text" id="authName" placeholder="Your name">
+      </div>
+      <div class="form-field">
+        <label>Email</label>
+        <input type="email" id="authEmail" placeholder="you@example.com" required>
+      </div>
+      <div class="form-field">
+        <label>Password</label>
+        <input type="password" id="authPassword" placeholder="At least 4 characters" required minlength="4">
+      </div>
+      <div class="form-err" id="authErr"></div>
+      <button type="submit" class="btn-primary" style="width:100%;justify-content:center;display:flex;">Continue</button>
+    </form>
+    <button class="btn-ghost" style="width:100%;justify-content:center;display:flex;margin-top:10px;" onclick="continueAsGuest()">Continue as guest</button>
+    <div class="login-foot">This is a front-end demo — accounts live only in this browser tab, nothing is sent anywhere.</div>
+  </div>
+</div>
+
+<script>
+/* ---------------- DATA ---------------- */
+const CITIES = [
+  {id:'lis', name:'Lisbon', country:'Portugal', region:'Europe', costIndex:2, popularity:88, color:'#D97A4B', blurb:'Pastel hills, tiled façades, the Tejo at dusk.', img:'lisbon,portugal,city', vibe:['culture','food'], lat:38.7223, lng:-9.1393, utc:1},
+  {id:'mrk', name:'Marrakesh', country:'Morocco', region:'Africa', costIndex:2, popularity:79, color:'#B8503A', blurb:'Souks, riads, and the Atlas on the horizon.', img:'marrakesh,morocco,souk', vibe:['culture','adventure'], lat:31.6295, lng:-7.9811, utc:1},
+  {id:'kyo', name:'Kyoto', country:'Japan', region:'Asia', costIndex:3, popularity:95, color:'#5C7A6B', blurb:'Temples, bamboo groves, a slower kind of city.', img:'kyoto,japan,temple', vibe:['culture','relax'], lat:35.0116, lng:135.7681, utc:9},
+  {id:'que', name:'Queenstown', country:'New Zealand', region:'Oceania', costIndex:4, popularity:74, color:'#39616E', blurb:'Alpine lake town built for adrenaline and quiet.', img:'queenstown,newzealand,lake', vibe:['adventure'], lat:-45.0312, lng:168.6626, utc:12},
+  {id:'lim', name:'Lima', country:'Peru', region:'South America', costIndex:2, popularity:61, color:'#8A5A3B', blurb:'Ceviche coastline and a jump-off for the Andes.', img:'lima,peru,coast', vibe:['food','adventure'], lat:-12.0464, lng:-77.0428, utc:-5},
+  {id:'ist', name:'Istanbul', country:'Türkiye', region:'Europe', costIndex:2, popularity:83, color:'#7A3F52', blurb:'Two continents, one bridge, endless tea.', img:'istanbul,turkey,mosque', vibe:['culture','food'], lat:41.0082, lng:28.9784, utc:3},
+  {id:'ubu', name:'Ubud', country:'Indonesia', region:'Asia', costIndex:1, popularity:70, color:'#4E6B4A', blurb:'Rice terraces and river valleys inland from the coast.', img:'ubud,bali,ricefield', vibe:['relax','food'], lat:-8.5069, lng:115.2625, utc:8},
+  {id:'cpt', name:'Cape Town', country:'South Africa', region:'Africa', costIndex:2, popularity:76, color:'#3E6E7E', blurb:'Table Mountain drops straight into the Atlantic.', img:'capetown,southafrica,mountain', vibe:['adventure','culture'], lat:-33.9249, lng:18.4241, utc:2},
+  {id:'osl', name:'Oslo', country:'Norway', region:'Europe', costIndex:5, popularity:58, color:'#2F4F5A', blurb:'Fjord light and a city built around the water.', img:'oslo,norway,fjord', vibe:['relax','culture'], lat:59.9139, lng:10.7522, utc:1},
+];
+function cityImg(c){ return `https://loremflickr.com/480/300/${encodeURIComponent(c.img)}`; }
+
+const ACTIVITIES = {
+  lis: [{n:'Tram 28 loop', t:'Sightseeing', c:6, d:'2h'},{n:'Fado dinner show', t:'Food', c:55, d:'3h'},{n:'Sintra day trip', t:'Sightseeing', c:35, d:'8h'},{n:'Surf lesson, Costa da Caparica', t:'Adventure', c:60, d:'3h'}],
+  mrk: [{n:'Jemaa el-Fnaa food crawl', t:'Food', c:25, d:'3h'},{n:'Majorelle Garden', t:'Sightseeing', c:9, d:'1.5h'},{n:'Atlas Mountains day hike', t:'Adventure', c:45, d:'7h'},{n:'Hammam &amp; spa', t:'Relax', c:40, d:'2h'}],
+  kyo: [{n:'Fushimi Inari at sunrise', t:'Sightseeing', c:0, d:'2h'},{n:'Arashiyama bamboo grove', t:'Sightseeing', c:5, d:'2h'},{n:'Kaiseki dinner', t:'Food', c:90, d:'2.5h'},{n:'Tea ceremony class', t:'Culture', c:38, d:'1.5h'}],
+  que: [{n:'Shotover jet boat', t:'Adventure', c:139, d:'1h'},{n:'Bungy jump, Kawarau bridge', t:'Adventure', c:205, d:'2h'},{n:'Lake Wakatipu cruise', t:'Sightseeing', c:80, d:'3.5h'},{n:'Fergburger + lakeside walk', t:'Food', c:15, d:'1h'}],
+  lim: [{n:'Ceviche cooking class', t:'Food', c:48, d:'3h'},{n:'Barranco street art walk', t:'Sightseeing', c:0, d:'2h'},{n:'Paragliding over Miraflores', t:'Adventure', c:70, d:'1h'}],
+  ist: [{n:'Bosphorus sunset cruise', t:'Sightseeing', c:25, d:'2h'},{n:'Hagia Sophia + Blue Mosque', t:'Culture', c:0, d:'3h'},{n:'Grand Bazaar &amp; tea', t:'Sightseeing', c:10, d:'2h'}],
+  ubu: [{n:'Tegallalang rice terrace walk', t:'Sightseeing', c:5, d:'2h'},{n:'Sunrise Mt Batur hike', t:'Adventure', c:40, d:'6h'},{n:'Balinese cooking class', t:'Food', c:30, d:'3h'}],
+  cpt: [{n:'Table Mountain cableway', t:'Sightseeing', c:24, d:'2h'},{n:'Cape Point drive', t:'Sightseeing', c:20, d:'5h'},{n:'Shark cage diving', t:'Adventure', c:150, d:'4h'}],
+  osl: [{n:'Vigeland Sculpture Park', t:'Sightseeing', c:0, d:'1.5h'},{n:'Fjord ferry to Bygdøy museums', t:'Culture', c:22, d:'4h'},{n:'New Nordic tasting menu', t:'Food', c:120, d:'3h'}],
+};
+
+/* ---------------- STATE ---------------- */
+let state = {
+  tripName: 'Kyoto & Beyond',
+  cap: 3500,
+  shared: false,
+  region: 'All',
+  query: '',
+  stops: [
+    {cityId:'lis', start:'2027-04-04', end:'2027-04-08', open:false, activities:[0,1]},
+    {cityId:'mrk', start:'2027-04-08', end:'2027-04-12', open:false, activities:[0,2]},
+    {cityId:'kyo', start:'2027-04-12', end:'2027-04-19', open:false, activities:[0,1,2]},
+    {cityId:'que', start:'2027-04-19', end:'2027-04-25', open:false, activities:[1]},
+  ],
+  user: { loggedIn:false, name:'', email:'' },
+  favorites: ['kyo'],
+  authMode: 'login',
+  pendingView: null,
+  chat: [],
+  chatLoading: false,
+  wizard: { vibe:'mixed', length:14, region:'All', result:null, shuffle:0 },
+  packing: [
+    {id:'p1', text:'Passport & travel documents', done:false},
+    {id:'p2', text:'Phone charger & adapter', done:false},
+    {id:'p3', text:'Sunscreen', done:false},
+    {id:'p4', text:'Comfortable walking shoes', done:false},
+  ],
+  journalText: '',
+  userLoc: null,       // {lat, lng} once granted
+  locStatus: 'idle',   // idle | locating | granted | denied
+  mapShowRoute: true,
+};
+
+function cityById(id){ return CITIES.find(c=>c.id===id); }
+function fmtDate(s){ if(!s) return '—'; const d=new Date(s+'T00:00:00'); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function nights(start,end){ if(!start||!end) return 0; const a=new Date(start), b=new Date(end); return Math.max(0,Math.round((b-a)/86400000)); }
+function tripDays(){ return state.stops.reduce((s,st)=>s+nights(st.start,st.end),0); }
+function money(n){ return '$'+Math.round(n).toLocaleString(); }
+
+/* ---------------- COST MODEL ---------------- */
+function stopCost(stop){
+  const city = cityById(stop.cityId);
+  const n = nights(stop.start, stop.end);
+  const stay = n * (35 * city.costIndex);
+  const meals = n * (18 * city.costIndex);
+  const transport = 140; // flat inter-city hop estimate
+  const acts = (ACTIVITIES[stop.cityId]||[]).filter((a,i)=>stop.activities.includes(i));
+  const activities = acts.reduce((s,a)=>s+a.c,0);
+  return {stay, meals, transport, activities, total: stay+meals+transport+activities, nights:n};
+}
+function tripBudget(){
+  const totals = {stay:0, meals:0, transport:0, activities:0};
+  state.stops.forEach(st=>{ const c = stopCost(st); totals.stay+=c.stay; totals.meals+=c.meals; totals.transport+=c.transport; totals.activities+=c.activities; });
+  const total = totals.stay+totals.meals+totals.transport+totals.activities;
+  return {...totals, total};
+}
+
+/* ---------------- NAV ---------------- */
+const GATED_VIEWS = ['favorites','assistant','profile'];
+function switchToView(view){
+  if(GATED_VIEWS.includes(view) && !state.user.loggedIn){
+    openLogin(view);
+    return;
+  }
+  document.querySelectorAll('#appNav button').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  document.querySelectorAll('.view').forEach(v=>v.style.display='none');
+  const el = document.getElementById('view-'+view);
+  if(el) el.style.display='block';
+  renderAll();
+  if(view==='worldmap'){ requestAnimationFrame(()=>{ initGlobe(); onGlobeStageResize(); }); }
+}
+document.getElementById('appNav').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-view]');
+  if(!btn) return;
+  switchToView(btn.dataset.view);
+});
+
+/* ---------------- AUTH ---------------- */
+function renderAuthArea(){
+  const el = document.getElementById('authArea');
+  if(!el) return;
+  if(!state.user.loggedIn){
+    el.innerHTML = `<button class="login-btn-nav" onclick="openLogin()">Log in</button>`;
+    return;
+  }
+  const initial = (state.user.name||'?').trim().charAt(0).toUpperCase() || '?';
+  el.innerHTML = `
+    <div class="auth-chip" onclick="event.stopPropagation();toggleAuthDropdown()">
+      <div class="auth-avatar">${initial}</div>
+      <span class="auth-name">${state.user.name}</span>
+      <span class="auth-caret">▾</span>
+      <div class="auth-dropdown" id="authDropdown">
+        <button onclick="switchToView('profile')">◉ Profile</button>
+        <button onclick="switchToView('favorites')">♥ My favorites</button>
+        <button onclick="switchToView('assistant')">✦ AI assistant</button>
+        <button onclick="logout()">Log out</button>
+      </div>
+    </div>`;
+}
+function toggleAuthDropdown(){ document.getElementById('authDropdown')?.classList.toggle('open'); }
+document.addEventListener('click', ()=>{ document.getElementById('authDropdown')?.classList.remove('open'); });
+
+function openLogin(pendingView){
+  state.pendingView = pendingView || null;
+  const heading = document.getElementById('loginHeading');
+  const sub = document.getElementById('loginSub');
+  if(pendingView==='favorites'){ heading.textContent='Save this favorite'; sub.textContent='Log in (or continue as guest) to star cities and build a favorites list.'; }
+  else if(pendingView==='assistant'){ heading.textContent='Chat with your trip assistant'; sub.textContent='Log in (or continue as guest) to ask the AI assistant about your itinerary.'; }
+  else { heading.textContent='Welcome back'; sub.textContent='Log in to save favorite places and chat with your trip assistant.'; }
+  document.getElementById('authErr').textContent='';
+  document.getElementById('loginOverlay').classList.add('open');
+}
+function closeLogin(){
+  document.getElementById('loginOverlay').classList.remove('open');
+  state.pendingView = null;
+}
+function setAuthMode(mode){
+  state.authMode = mode;
+  document.querySelectorAll('.login-tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===mode));
+  document.getElementById('nameField').style.display = mode==='signup' ? 'flex' : 'none';
+}
+function handleAuth(e){
+  e.preventDefault();
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const nameInput = document.getElementById('authName').value.trim();
+  if(!email || password.length < 4){
+    document.getElementById('authErr').textContent = 'Enter a valid email and a password of at least 4 characters.';
+    return;
+  }
+  const name = state.authMode==='signup' ? (nameInput || email.split('@')[0]) : email.split('@')[0];
+  state.user = { loggedIn:true, name, email };
+  finishLogin();
+}
+function continueAsGuest(){
+  state.user = { loggedIn:true, name:'Guest', email:'' };
+  finishLogin();
+}
+function continueWithGoogle(){
+  const btn = document.querySelector('.btn-google');
+  if(btn){ btn.disabled = true; btn.style.opacity = '0.7'; btn.lastChild.textContent = ' Connecting to Google…'; }
+  toast('Connecting to Google…');
+  setTimeout(()=>{
+    state.user = { loggedIn:true, name:'Alex Rivera', email:'alex.rivera@gmail.com', provider:'google' };
+    finishLogin();
+    if(btn){ btn.disabled = false; btn.style.opacity = '1'; btn.lastChild.textContent = ' Continue with Google'; }
+  }, 650);
+}
+function finishLogin(){
+  closeLogin();
+  renderAuthArea();
+  toast('Welcome, '+state.user.name+'!');
+  const pending = state.pendingView;
+  state.pendingView = null;
+  if(pending){ switchToView(pending); }
+  document.getElementById('authForm').reset();
+}
+function logout(){
+  state.user = { loggedIn:false, name:'', email:'' };
+  renderAuthArea();
+  toast('Logged out');
+  const activeView = document.querySelector('#appNav button.active')?.dataset.view;
+  if(GATED_VIEWS.includes(activeView)) switchToView('dashboard');
+}
+function openAssistant(){
+  document.getElementById('app').scrollIntoView({behavior:'smooth'});
+  setTimeout(()=>switchToView('assistant'), 250);
+}
+
+document.getElementById('tripNameInput').addEventListener('input', (e)=>{
+  state.tripName = e.target.value;
+  renderShare();
+});
+document.getElementById('capInput').addEventListener('input', (e)=>{
+  state.cap = Number(e.target.value)||0;
+  renderBudget();
+});
+document.getElementById('citySearch').addEventListener('input', (e)=>{
+  state.query = e.target.value.toLowerCase();
+  renderDiscover();
+});
+
+/* ---------------- RENDER: DASHBOARD ---------------- */
+function renderDashboard(){
+  const b = tripBudget();
+  const days = tripDays();
+  document.getElementById('tripMeta').textContent = `${state.stops.length} stops · ${days} days · ${state.stops.length? fmtDate(state.stops[0].start)+' – '+fmtDate(state.stops[state.stops.length-1].end) : 'no dates yet'}`;
+
+  document.getElementById('dashStats').innerHTML = `
+    <div class="stat-card"><div class="lbl">Cities</div><div class="val">${state.stops.length}</div><div class="sub">${state.stops.length? cityById(state.stops[0].cityId).region+' → '+cityById(state.stops[state.stops.length-1].cityId).region : '—'}</div></div>
+    <div class="stat-card"><div class="lbl">Trip length</div><div class="val">${days} days</div><div class="sub">${state.stops.reduce((s,st)=>s+ (ACTIVITIES[st.cityId]||[]).filter((a,i)=>st.activities.includes(i)).length,0)} activities planned</div></div>
+    <div class="stat-card"><div class="lbl">Estimated total</div><div class="val">${money(b.total)}</div><div class="sub" style="color:${b.total>state.cap?'var(--bad)':'var(--good)'}">${b.total>state.cap? 'over your '+money(state.cap)+' cap':'within your '+money(state.cap)+' cap'}</div></div>
+  `;
+
+  document.getElementById('dashRoute').innerHTML = state.stops.length ? state.stops.map((st,i)=>{
+    const c = cityById(st.cityId);
+    return `<div style="display:flex;align-items:center;gap:14px;padding:12px 4px;${i<state.stops.length-1?'border-bottom:1px solid var(--line);':''}">
+      <div class="stop-num">${i+1}</div>
+      <div style="width:8px;height:8px;border-radius:50%;background:${c.color};flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div style="font-family:'Fraunces',serif;font-size:0.98rem;">${c.name}, ${c.country}</div>
+        <div style="font-size:0.78rem;color:#6A7A76;">${fmtDate(st.start)} – ${fmtDate(st.end)} · ${nights(st.start,st.end)} nights</div>
+      </div>
+      <div class="mono" style="font-size:0.82rem;color:#5A6B67;">${money(stopCost(st).total)}</div>
+    </div>`;
+  }).join('') : `<div class="empty-note">No stops yet. Go to <b>Discover cities</b> to add your first stop.</div>`;
+
+  document.getElementById('heroActCount').textContent = state.stops.reduce((s,st)=>s+(ACTIVITIES[st.cityId]||[]).filter((a,i)=>st.activities.includes(i)).length,0);
+  document.getElementById('heroBudget').textContent = money(b.total);
+}
+
+/* ---------------- RENDER: DISCOVER ---------------- */
+const REGIONS = ['All', ...new Set(CITIES.map(c=>c.region))];
+document.getElementById('regionFilters').innerHTML = REGIONS.map(r=>`<button class="chip ${r==='All'?'active':''}" data-region="${r}">${r}</button>`).join('');
+document.getElementById('regionFilters').addEventListener('click', e=>{
+  const chip = e.target.closest('.chip'); if(!chip) return;
+  document.querySelectorAll('#regionFilters .chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  state.region = chip.dataset.region;
+  renderDiscover();
+});
+
+function renderDiscover(){
+  let list = CITIES.filter(c=> state.region==='All' || c.region===state.region);
+  if(state.query) list = list.filter(c=> (c.name+c.country).toLowerCase().includes(state.query));
+  document.getElementById('cityGrid').innerHTML = list.map(c=>{
+    const added = state.stops.some(s=>s.cityId===c.id);
+    const faved = state.favorites.includes(c.id);
+    return `<div class="city-card">
+      <div class="city-swatch" style="background-color:${c.color};background-image:linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55)), url('${cityImg(c)}');background-size:cover;background-position:center;">
+        <button class="fav-heart ${faved?'on':''}" onclick="toggleFavorite('${c.id}')" title="${faved?'Remove favorite':'Save favorite'}">${faved?'♥':'♡'}</button>
+        <span class="cname">${c.name}</span>
+      </div>
+      <div class="city-meta"><span>${c.country}</span><span>cost <b>${'$'.repeat(c.costIndex)}</b></span></div>
+      <div class="city-meta"><span>Popularity</span><b>${c.popularity}/100</b></div>
+      <button class="add-btn ${added?'added':''}" onclick="addCity('${c.id}')">${added? '✓ Added to trip' : '+ Add to trip'}</button>
+    </div>`;
+  }).join('');
+}
+function toggleFavorite(cityId){
+  if(!state.user.loggedIn){ openLogin('favorites'); return; }
+  const i = state.favorites.indexOf(cityId);
+  if(i>-1){ state.favorites.splice(i,1); toast(cityById(cityId).name+' removed from favorites'); }
+  else { state.favorites.push(cityId); toast(cityById(cityId).name+' saved to favorites'); }
+  renderDiscover();
+  renderFavorites();
+}
+function renderFavorites(){
+  const grid = document.getElementById('favGrid'); if(!grid) return;
+  const favCities = state.favorites.map(cityById).filter(Boolean);
+  document.getElementById('favEmpty').style.display = favCities.length? 'none':'block';
+  grid.innerHTML = favCities.map(c=>{
+    const added = state.stops.some(s=>s.cityId===c.id);
+    return `<div class="city-card">
+      <div class="city-swatch" style="background-color:${c.color};background-image:linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55)), url('${cityImg(c)}');background-size:cover;background-position:center;">
+        <button class="fav-heart on" onclick="toggleFavorite('${c.id}')" title="Remove favorite">♥</button>
+        <span class="cname">${c.name}</span>
+      </div>
+      <div class="city-meta"><span>${c.country}</span><span>cost <b>${'$'.repeat(c.costIndex)}</b></span></div>
+      <div class="city-meta"><span style="max-width:150px;">${c.blurb}</span></div>
+      <button class="add-btn ${added?'added':''}" onclick="addCity('${c.id}')">${added? '✓ Added to trip' : '+ Add to trip'}</button>
+    </div>`;
+  }).join('');
+}
+function addCity(id){
+  if(state.stops.some(s=>s.cityId===id)) return;
+  const last = state.stops[state.stops.length-1];
+  const start = last ? addDays(last.end, 1) : '2027-04-04';
+  const end = addDays(start, 4);
+  state.stops.push({cityId:id, start, end, open:true, activities:[]});
+  toast(cityById(id).name+' added to itinerary');
+  renderAll();
+}
+function addDays(dateStr, n){
+  const d = new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+
+/* ---------------- RENDER: ITINERARY ---------------- */
+function renderItinerary(){
+  document.getElementById('itinEmpty').style.display = state.stops.length? 'none':'block';
+  document.getElementById('stopsList').innerHTML = state.stops.map((st,i)=>{
+    const c = cityById(st.cityId);
+    const acts = ACTIVITIES[st.cityId]||[];
+    const chosen = acts.filter((a,ai)=>st.activities.includes(ai));
+    const available = acts.map((a,ai)=>({a,ai})).filter(o=>!st.activities.includes(o.ai));
+    return `<div class="stop">
+      <div class="stop-head" onclick="toggleStop(${i})">
+        <div class="stop-num">${i+1}</div>
+        <div class="stop-info">
+          <div class="sname">${c.name}, ${c.country}</div>
+          <div class="sdates">${fmtDate(st.start)} – ${fmtDate(st.end)} · ${nights(st.start,st.end)} nights · ${chosen.length} activities</div>
+        </div>
+        <div class="stop-actions" onclick="event.stopPropagation()">
+          <button class="icon-btn" title="Move up" onclick="moveStop(${i},-1)">↑</button>
+          <button class="icon-btn" title="Move down" onclick="moveStop(${i},1)">↓</button>
+          <button class="icon-btn danger" title="Remove stop" onclick="removeStop(${i})">✕</button>
+        </div>
+      </div>
+      <div class="stop-body ${st.open?'open':''}">
+        <div class="date-row">
+          <div class="date-field"><label>Arrive</label><input type="date" value="${st.start}" onchange="setDate(${i},'start',this.value)"></div>
+          <div class="date-field"><label>Depart</label><input type="date" value="${st.end}" onchange="setDate(${i},'end',this.value)"></div>
+        </div>
+        <div class="section-title" style="margin-top:0;">Activities</div>
+        ${chosen.length? chosen.map(a=>{
+          const ai = acts.indexOf(a);
+          return `<div class="act-row"><span class="an">${a.n}</span><span class="ac">${a.d} · ${a.c? '$'+a.c : 'free'} <button class="icon-btn" style="width:24px;height:24px;" onclick="removeActivity(${i},${ai})">✕</button></span></div>`;
+        }).join('') : '<div class="empty-note">No activities added for this stop yet.</div>'}
+        ${available.length? `<div class="act-add-row">
+          <select class="mini-select" id="actSelect${i}">
+            ${available.map(o=>`<option value="${o.ai}">${o.a.n} — ${o.a.d}, ${o.a.c?'$'+o.a.c:'free'}</option>`).join('')}
+          </select>
+          <button class="mini-btn" onclick="addActivity(${i})">+ Add activity</button>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleStop(i){ state.stops[i].open = !state.stops[i].open; renderItinerary(); }
+function moveStop(i, dir){
+  const j = i+dir; if(j<0||j>=state.stops.length) return;
+  [state.stops[i], state.stops[j]] = [state.stops[j], state.stops[i]];
+  renderAll();
+}
+function removeStop(i){ state.stops.splice(i,1); toast('Stop removed'); renderAll(); }
+function setDate(i, key, val){ state.stops[i][key]=val; renderAll(); }
+function addActivity(i){
+  const sel = document.getElementById('actSelect'+i); if(!sel) return;
+  state.stops[i].activities.push(Number(sel.value));
+  renderAll();
+}
+function removeActivity(i, ai){ state.stops[i].activities = state.stops[i].activities.filter(x=>x!==ai); renderAll(); }
+
+/* ---------------- RENDER: BUDGET ---------------- */
+function renderBudget(){
+  const b = tripBudget();
+  const days = tripDays();
+  document.getElementById('budgetTotal').textContent = money(b.total);
+  document.getElementById('budgetPerDay').textContent = money(days? b.total/days : 0);
+  document.getElementById('budgetDays').textContent = days;
+
+  const cats = [
+    {k:'stay', label:'Accommodation', color:'#3E6E7E'},
+    {k:'transport', label:'Transport', color:'#C9A25C'},
+    {k:'activities', label:'Activities', color:'#F0693F'},
+    {k:'meals', label:'Meals', color:'#5C7A6B'},
+  ];
+  const max = Math.max(1, b.total);
+  document.getElementById('budgetBars').innerHTML = cats.map(c=>{
+    const v = b[c.k];
+    const pct = b.total? (v/b.total*100) : 0;
+    return `<div class="bar-row">
+      <div class="bh"><span>${c.label}</span><span class="mono">${money(v)} · ${pct.toFixed(0)}%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${c.color};"></div></div>
+    </div>`;
+  }).join('');
+
+  const alertEl = document.getElementById('budgetAlert');
+  if(b.total > state.cap){
+    alertEl.innerHTML = `<div class="alert warn"><span>⚠</span><span>You're ${money(b.total-state.cap)} over your ${money(state.cap)} cap. Consider trimming activities or a lower-cost stop.</span></div>`;
+  } else {
+    alertEl.innerHTML = `<div class="alert ok"><span>✓</span><span>You're ${money(state.cap-b.total)} under your ${money(state.cap)} cap.</span></div>`;
+  }
+
+  document.getElementById('budgetByStop').innerHTML = state.stops.length ? state.stops.map(st=>{
+    const c = cityById(st.cityId); const cost = stopCost(st);
+    return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:0.86rem;">
+      <span>${c.name}</span><span class="mono">${money(cost.total)}</span>
+    </div>`;
+  }).join('') : '<div class="empty-note">Add stops to see a per-city breakdown.</div>';
+}
+
+/* ---------------- RENDER: CALENDAR ---------------- */
+function renderCalendar(){
+  const el = document.getElementById('calendarBody');
+  if(!state.stops.length){ el.innerHTML = '<div class="empty-note">Add stops with dates to build your timeline.</div>'; return; }
+  let rows = [];
+  state.stops.forEach(st=>{
+    const c = cityById(st.cityId);
+    const n = nights(st.start, st.end);
+    const acts = (ACTIVITIES[st.cityId]||[]).filter((a,i)=>st.activities.includes(i));
+    for(let d=0; d<Math.max(n,1); d++){
+      const date = addDays(st.start, d);
+      const dayActs = acts.filter((a,idx)=> idx % Math.max(n,1) === d % Math.max(acts.length,1) ? true : (n<=acts.length ? true : false));
+      rows.push({date, city:c, isFirst: d===0, acts: d===0 ? acts : (n<=1 ? [] : (d < acts.length ? [acts[d]] : []))});
+    }
+  });
+  el.innerHTML = rows.map(r=>{
+    const dt = new Date(r.date+'T00:00:00');
+    return `<div class="day">
+      <div class="day-date"><b>${dt.toLocaleDateString('en-US',{weekday:'short'})}</b>${dt.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+      <div class="day-events">
+        ${r.isFirst? `<div class="day-city-tag"><span style="width:7px;height:7px;border-radius:50%;background:${r.city.color};display:inline-block;"></span>Arrive in ${r.city.name}</div>` : ''}
+        ${r.acts.length? r.acts.map(a=>`<div class="day-act">${a.n} <span class="mono" style="color:#8A968F;">· ${a.d}</span></div>`).join('') : (r.isFirst? '' : '<div class="day-act" style="opacity:.55;">Free day in '+r.city.name+'</div>')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- RENDER: SHARE ---------------- */
+function toggleShare(){
+  state.shared = !state.shared;
+  renderShare();
+  toast(state.shared? 'Trip published' : 'Trip made private');
+}
+function copyLink(){
+  const link = document.getElementById('shareLink').textContent;
+  if(navigator.clipboard){ navigator.clipboard.writeText('https://'+link).catch(()=>{}); }
+  toast('Link copied');
+}
+function renderShare(){
+  const sw = document.getElementById('shareSwitch');
+  sw.classList.toggle('on', state.shared);
+  document.getElementById('shareStateLabel').textContent = state.shared? 'Trip is public' : 'Trip is private';
+  document.getElementById('shareLinkArea').style.display = state.shared? 'block':'none';
+  document.getElementById('publicPreview').style.display = state.shared? 'block':'none';
+  const slug = state.tripName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'trip';
+  document.getElementById('shareLink').textContent = `globetrotter.app/t/${slug}-x7q2`;
+  document.getElementById('pubTitle').textContent = state.tripName;
+  document.getElementById('pubMeta').textContent = `${state.stops.length} stops · ${tripDays()} days`;
+  document.getElementById('pubStops').innerHTML = state.stops.map((st,i)=>{
+    const c = cityById(st.cityId);
+    return `<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:0.87rem;">
+      <span>${i+1}. ${c.name}, ${c.country}</span><span style="color:#6A7A76;">${fmtDate(st.start)} – ${fmtDate(st.end)}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- RENDER: AI ASSISTANT ---------------- */
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function renderChat(){
+  const win = document.getElementById('chatWindow'); if(!win) return;
+  if(!state.chat.length){
+    win.innerHTML = '<div class="empty-note">Ask things like "What should I do with a free afternoon in Kyoto?" or "Am I within budget?"</div>';
+  } else {
+    win.innerHTML = state.chat.map(m=>`<div class="chat-msg ${m.role}"><div class="bubble">${escapeHtml(m.text).replace(/\n/g,'<br>')}</div></div>`).join('')
+      + (state.chatLoading? '<div class="chat-msg assistant"><div class="bubble typing"><span></span><span></span><span></span></div></div>' : '');
+  }
+  win.scrollTop = win.scrollHeight;
+  const suggestEl = document.getElementById('chatSuggest');
+  if(suggestEl){
+    const suggestions = ['What should I do with a free afternoon?','Am I within budget?','Any jet lag I should plan for?','Could my route be shorter?'];
+    suggestEl.innerHTML = state.chat.length ? '' : suggestions.map(s=>`<button class="chip" onclick="quickChat('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('');
+  }
+}
+function quickChat(text){
+  const input = document.getElementById('chatInput');
+  if(input) input.value = text;
+  sendChat();
+}
+/* ---------------- LOCAL TRIP ASSISTANT ----------------
+   This runs entirely in the browser (no external API, no key, no network
+   dependency) so it always works, on any device, offline or online. It
+   reasons over the trip's real state — itinerary, budget, packing, and
+   live world-map/location data — rather than being a generic chatbot. */
+function findMentionedCity(lower){
+  return CITIES.find(c=> lower.includes(c.name.toLowerCase()) || lower.includes(c.country.toLowerCase()));
+}
+function nextOrFirstStop(){
+  const today = new Date(new Date().toDateString());
+  return state.stops.find(s=> new Date(s.end+'T00:00:00') >= today) || state.stops[0] || null;
+}
+function generateAssistantReply(raw){
+  const text = raw.trim();
+  const lower = text.toLowerCase();
+  const b = tripBudget();
+  const days = tripDays();
+  const mentioned = findMentionedCity(lower);
+
+  if(/^(hi|hello|hey)\b/.test(lower)){
+    return `Hey! Your "${state.tripName}" trip has ${state.stops.length} stop${state.stops.length===1?'':'s'} over ${days} days, running ${money(b.total)} against your ${money(state.cap)} cap. Ask me about budget, packing, a free afternoon, or a specific city.`;
+  }
+
+  if(/budget|afford|cost|expensive|cheap|over|under.*cap|money|spend/.test(lower)){
+    const diff = b.total - state.cap;
+    const byCity = state.stops.map(s=>{ const c=cityById(s.cityId); return `${c.name} ${money(stopCost(s).total)}`; }).join(', ');
+    if(!state.stops.length) return `You haven't added any stops yet, so there's nothing to cost out — add a city in Discover and I can break the budget down.`;
+    if(diff>0) return `You're ${money(diff)} over your ${money(state.cap)} cap (estimated total ${money(b.total)}). By stop: ${byCity}. The biggest lever is usually lodging nights or trimming one paid activity — want me to point at the priciest stop?`;
+    return `You're ${money(Math.abs(diff))} under your ${money(state.cap)} cap — estimated total is ${money(b.total)}. By stop: ${byCity}. Room to add another activity or two.`;
+  }
+
+  if(/pack|luggage|bring|suitcase/.test(lower)){
+    const done = state.packing.filter(p=>p.done).length;
+    if(!state.packing.length) return `Your packing list is empty — head to the Packing checklist tab to start one.`;
+    const left = state.packing.filter(p=>!p.done).map(p=>p.text).slice(0,5);
+    return `You've packed ${done} of ${state.packing.length} items. Still open: ${left.join(', ')}${state.packing.length-done>5?', …':''}.`;
+  }
+
+  if(/(free (afternoon|day|time)|suggest|hidden gem|what should i do|things to do|activity|activities)/.test(lower)){
+    const target = mentioned || (nextOrFirstStop() ? cityById(nextOrFirstStop().cityId) : null);
+    if(!target) return `Add a stop first and I can pull real activity ideas for it — right now your itinerary is empty.`;
+    const stop = state.stops.find(s=>s.cityId===target.id);
+    const acts = ACTIVITIES[target.id] || [];
+    const unpicked = stop ? acts.filter((a,i)=>!stop.activities.includes(i)) : acts;
+    const pick = (unpicked.length?unpicked:acts)[0];
+    if(!pick) return `I don't have activity ideas logged for ${target.name} yet — check Discover cities for the overview.`;
+    return `For ${target.name}: try "${pick.n}" (${pick.t}, about ${pick.d}${pick.c?`, ~$${pick.c}`:', free'}). ${unpicked.length>1?`You could pair it with "${unpicked[1].n}" if you have a full day.`:'Add it from the itinerary stop card to lock it in.'}`;
+  }
+
+  if(/(time|clock|sunset|sunrise|golden hour|weather)/.test(lower)){
+    const target = mentioned || (nextOrFirstStop() ? cityById(nextOrFirstStop().cityId) : null);
+    if(!target) return `Add a stop and check the World map tab — it shows live local time and golden hour for every stop, updating automatically.`;
+    const now = cityNow(target);
+    const st = sunTimes(target.lat, target.lng, now);
+    const sunsetTxt = (!st.polarNight && !st.midnightSun) ? `sunset is around ${utcHourToLocalClock(st.sunsetUTC, target.utc, now)} local time` : (st.midnightSun ? 'it has midnight sun today' : 'it has a polar night today');
+    return `Right now it's ${fmtClock(now)} in ${target.name} (UTC${target.utc>=0?'+':''}${target.utc}), and ${sunsetTxt}. Full live strip is on the World map tab.`;
+  }
+
+  if(/near me|nearby|close to me|around me|stopover|serendipity|halfway/.test(lower)){
+    if(!state.userLoc) return `I don't have your location yet — open the World map tab and tap "Use my location," then ask me again.`;
+    const withDist = CITIES.map(c=>({c, km: haversineKm(state.userLoc,{lat:c.lat,lng:c.lng})})).sort((a,b)=>a.km-b.km);
+    const closest = withDist[0];
+    return `${closest.c.name}, ${closest.c.country} is closest to you right now, about ${Math.round(closest.km).toLocaleString()} km away. The World map tab also has a "Stopover Serendipity" pick — a real layover city near the midpoint between you and your next stop.`;
+  }
+
+  if(/jet ?lag|time ?zone adjust|timezone shift/.test(lower)){
+    if(state.stops.length<2) return `Add a second stop and check the World map tab's Jet Lag Planner — it'll estimate recovery days between each pair of cities based on the timezone shift.`;
+    let worst = null;
+    for(let i=1;i<state.stops.length;i++){
+      const a = cityById(state.stops[i-1].cityId), b = cityById(state.stops[i].cityId);
+      const d = jetlagDelta(a.utc,b.utc);
+      if(!worst || Math.abs(d)>Math.abs(worst.d)) worst = {a,b,d};
+    }
+    const hours = Math.abs(worst.d);
+    if(hours===0) return `Your stops mostly stay in similar time zones — minimal jet lag on this trip. Full breakdown is in the World map tab's Jet Lag Planner.`;
+    const days = Math.ceil(hours/(worst.d>0?1:1.5));
+    return `Your biggest shift is ${worst.a.name} → ${worst.b.name}: ${hours}h ${worst.d>0?'ahead':'behind'}, roughly ${days} day${days>1?'s':''} to adjust. Full leg-by-leg breakdown is in the World map tab's Jet Lag Planner.`;
+  }
+
+  if(/carbon|co2|emission|footprint|offset/.test(lower)){
+    if(state.stops.length<2) return `Add at least two stops and I can estimate flight distance and rough CO₂ for the route — see the Carbon & Distance card on the World map tab.`;
+    const { totalKm, kg } = tripCarbon();
+    return `Your route covers about ${Math.round(totalKm).toLocaleString()} km, roughly ${Math.round(kg).toLocaleString()} kg CO₂ at a rough economy-class estimate — full per-leg breakdown on the World map tab.`;
+  }
+
+  if(/shorter route|reorder|optimi[sz]e|route efficien|better order/.test(lower)){
+    if(state.stops.length<3) return `Add a third stop and I'll check whether a different visiting order would shorten your total travel distance — see "Smarter Order" on the World map tab.`;
+    const best = bestRouteOrder();
+    if(!best) return `With ${state.stops.length} stops that's too many orderings to check instantly — this works best for 3–7 cities.`;
+    const currentKm = computeRouteKm(state.stops.map(s=>s.cityId));
+    const savings = currentKm-best.km;
+    if(savings < Math.max(50, currentKm*0.03)) return `Your current order is already close to the shortest possible route between these cities — nice routing.`;
+    return `Visiting ${best.order.map(id=>cityById(id).name).join(' → ')} instead would save about ${Math.round(savings).toLocaleString()} km (${Math.round(savings/currentKm*100)}%). You can apply it from "Smarter Order" on the World map tab.`;
+  }
+
+  if(mentioned){
+    const inTrip = state.stops.some(s=>s.cityId===mentioned.id);
+    return `${mentioned.name}, ${mentioned.country}: ${mentioned.blurb} ${inTrip? "It's already in your itinerary." : 'Not on your itinerary yet — I can tell you an activity for it, or you can add it from Discover cities.'}`;
+  }
+
+  if(!state.stops.length){
+    return `Your itinerary is empty right now. Head to "Discover cities" or "Plan a trip" to add your first stop, then ask me about budget, packing, or things to do.`;
+  }
+  const stopsDesc = state.stops.map((st,i)=>{ const c=cityById(st.cityId); return `${i+1}. ${c.name} (${fmtDate(st.start)}–${fmtDate(st.end)})`; }).join(', ');
+  return `Here's where things stand on "${state.tripName}": ${stopsDesc}. ${days} days total, ${money(b.total)} estimated against your ${money(state.cap)} cap. Try asking about budget, packing, a free afternoon, or a specific city.`;
+}
+
+async function sendChat(){
+  const input = document.getElementById('chatInput');
+  if(!input) return;
+  const text = input.value.trim();
+  if(!text || state.chatLoading) return;
+  state.chat.push({role:'user', text});
+  input.value = '';
+  renderChat();
+  state.chatLoading = true;
+  renderChat();
+  // Small delay so the typing indicator reads naturally — the reply itself
+  // is computed locally and instantly, so this never hangs or fails.
+  await new Promise(res=>setTimeout(res, 380 + Math.random()*260));
+  try{
+    const textOut = generateAssistantReply(text);
+    state.chat.push({role:'assistant', text: textOut});
+  }catch(err){
+    state.chat.push({role:'assistant', text:"I hit a snag reading your trip data just then — try asking again."});
+  }
+  state.chatLoading = false;
+  renderChat();
+}
+
+/* ---------------- RENDER: PLAN A TRIP WIZARD ---------------- */
+const VIBES = [
+  {id:'mixed', label:'A bit of everything'},
+  {id:'culture', label:'Culture & food'},
+  {id:'adventure', label:'Adventure & outdoors'},
+  {id:'relax', label:'Relax & nature'},
+];
+const LENGTHS = [
+  {id:7, label:'About a week'},
+  {id:14, label:'Two weeks'},
+  {id:24, label:'Three+ weeks'},
+];
+function renderWizard(){
+  const vibeEl = document.getElementById('wizVibe'); if(!vibeEl) return;
+  vibeEl.innerHTML = VIBES.map(v=>`<button class="chip ${state.wizard.vibe===v.id?'active':''}" onclick="setWizardVibe('${v.id}')">${v.label}</button>`).join('');
+  document.getElementById('wizLength').innerHTML = LENGTHS.map(l=>`<button class="chip ${state.wizard.length===l.id?'active':''}" onclick="setWizardLength(${l.id})">${l.label}</button>`).join('');
+  document.getElementById('wizRegion').innerHTML = REGIONS.map(r=>`<button class="chip ${state.wizard.region===r?'active':''}" onclick="setWizardRegion('${r}')">${r}</button>`).join('');
+  const wrap = document.getElementById('wizResultWrap');
+  const result = state.wizard.result;
+  if(!result || !result.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  document.getElementById('wizResult').innerHTML = result.map(st=>{
+    const c = cityById(st.cityId);
+    const cost = stopCost(st);
+    return `<div class="city-card">
+      <div class="city-swatch" style="background-color:${c.color};background-image:linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55)), url('${cityImg(c)}');background-size:cover;background-position:center;">
+        <span class="cname">${c.name}</span>
+      </div>
+      <div class="city-meta"><span>${c.country}</span><span>${nights(st.start,st.end)} nights</span></div>
+      <div class="city-meta"><span>${fmtDate(st.start)} – ${fmtDate(st.end)}</span><b class="mono">${money(cost.total)}</b></div>
+    </div>`;
+  }).join('');
+}
+function setWizardVibe(v){ state.wizard.vibe=v; renderWizard(); }
+function setWizardLength(n){ state.wizard.length=n; renderWizard(); }
+function setWizardRegion(r){ state.wizard.region=r; renderWizard(); }
+function generatePlan(){
+  const days = state.wizard.length;
+  let pool = CITIES.filter(c=> state.wizard.region==='All' || c.region===state.wizard.region);
+  if(state.wizard.vibe!=='mixed'){
+    const filtered = pool.filter(c=>c.vibe.includes(state.wizard.vibe));
+    if(filtered.length>=2) pool = filtered;
+  }
+  if(pool.length<2) pool = CITIES.slice();
+  pool = pool.slice().sort((a,b)=>b.popularity-a.popularity);
+  const n = Math.min(pool.length, days<=8?2 : days<=16?3 : 4);
+  const offset = state.wizard.shuffle % pool.length;
+  const picks = [];
+  for(let i=0;i<pool.length && picks.length<n;i++){ picks.push(pool[(i+offset)%pool.length]); }
+  const perCity = Math.max(3, Math.round(days/n));
+  let cursor = addDays(new Date().toISOString().slice(0,10), 60);
+  const stops = picks.map(c=>{
+    const start = cursor;
+    const end = addDays(start, perCity);
+    cursor = end;
+    const firstAct = (ACTIVITIES[c.id]||[]).length ? [0] : [];
+    return {cityId:c.id, start, end, open:false, activities:firstAct};
+  });
+  state.wizard.result = stops;
+  renderWizard();
+}
+function shufflePlan(){ state.wizard.shuffle = (state.wizard.shuffle||0)+1; generatePlan(); }
+function useGeneratedPlan(){
+  if(!state.wizard.result || !state.wizard.result.length) return;
+  state.stops = state.wizard.result.map(s=>({...s}));
+  toast('New itinerary applied — '+state.stops.length+' stops');
+  switchToView('itinerary');
+}
+
+/* ---------------- WORLD MAP + LOCATION + SOLAR ---------------- */
+const WM_W = 640, WM_H = 320;
+function wmX(lng){ return (lng+180)/360 * WM_W; }
+function wmY(lat){ return (90-lat)/180 * WM_H; }
+
+function haversineKm(a, b){
+  const R = 6371;
+  const dLat = (b.lat-a.lat) * Math.PI/180;
+  const dLng = (b.lng-a.lng) * Math.PI/180;
+  const la1 = a.lat * Math.PI/180, la2 = b.lat * Math.PI/180;
+  const h = Math.sin(dLat/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.min(1, Math.sqrt(h)));
+}
+function midpoint(a, b){
+  // simple great-circle midpoint
+  const toRad = d=>d*Math.PI/180, toDeg = r=>r*180/Math.PI;
+  const la1=toRad(a.lat), lo1=toRad(a.lng), la2=toRad(b.lat), lo2=toRad(b.lng);
+  const bx = Math.cos(la2)*Math.cos(lo2-lo1), by = Math.cos(la2)*Math.sin(lo2-lo1);
+  const la3 = Math.atan2(Math.sin(la1)+Math.sin(la2), Math.sqrt((Math.cos(la1)+bx)**2 + by**2));
+  const lo3 = lo1 + Math.atan2(by, Math.cos(la1)+bx);
+  return { lat: toDeg(la3), lng: toDeg(lo3) };
+}
+
+/* Approximate local "now" for a city using its stored UTC offset (no DST database — close enough for a travel-planning glance) */
+function cityNow(city){
+  const utcMs = Date.now() + (new Date().getTimezoneOffset()*60000);
+  return new Date(utcMs + city.utc*3600000);
+}
+function fmtClock(d){ return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
+
+/* Sunrise/sunset (NOAA simplified solar position algorithm) — used to surface each stop's golden hour */
+function sunTimes(lat, lng, date){
+  const rad = Math.PI/180;
+  const dayMs = 86400000;
+  const start = Date.UTC(date.getUTCFullYear(),0,1);
+  const dayOfYear = Math.floor((Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate())-start)/dayMs)+1;
+  const decl = 23.45*rad*Math.sin(2*Math.PI*(284+dayOfYear)/365);
+  const latR = lat*rad;
+  const cosH = (Math.sin(-0.83*rad) - Math.sin(latR)*Math.sin(decl)) / (Math.cos(latR)*Math.cos(decl));
+  if(cosH>1) return {polarNight:true};
+  if(cosH<-1) return {midnightSun:true};
+  const hourAngle = Math.acos(cosH)/rad; // degrees
+  const solarNoonUTC = 12 - lng/15;
+  const sunriseUTC = solarNoonUTC - hourAngle/15;
+  const sunsetUTC = solarNoonUTC + hourAngle/15;
+  return { sunriseUTC, sunsetUTC };
+}
+function utcHourToLocalClock(hourFloat, utcOffset, date){
+  const h = ((hourFloat + utcOffset) % 24 + 24) % 24;
+  const hh = Math.floor(h);
+  const mm = Math.round((h-hh)*60);
+  const d = new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate(), hh, mm));
+  return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+
+function locateMe(){
+  if(!navigator.geolocation){ toast("This browser can't share location."); return; }
+  state.locStatus = 'locating';
+  renderWorldMap();
+  updateGlobeButtonLabel();
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      state.userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      state.locStatus = 'granted';
+      toast('Location found — showing distances from you');
+      renderWorldMap(); renderNearYou(); updateGlobeMarkers(); updateGlobeButtonLabel();
+    },
+    err=>{
+      state.locStatus = 'denied';
+      toast('Location unavailable — you can still browse the map');
+      renderWorldMap(); updateGlobeButtonLabel();
+    },
+    { enableHighAccuracy:false, timeout:8000 }
+  );
+}
+function updateGlobeButtonLabel(){
+  const btn = document.getElementById('globeLocateBtn');
+  if(!btn) return;
+  btn.innerHTML = state.locStatus==='locating' ? '◎ Locating…' : state.locStatus==='granted' ? '◎ Location on' : '◎ Use my location';
+}
+function toggleMapRoute(){ state.mapShowRoute = !state.mapShowRoute; renderWorldMap(); }
+
+function renderWorldMap(){
+  const wrap = document.getElementById('wmMapWrap'); if(!wrap) return;
+  const btn = document.getElementById('locateBtn');
+  if(btn) btn.innerHTML = state.locStatus==='locating' ? '◎ Locating…' : state.locStatus==='granted' ? '◎ Location on' : '◎ Use my location';
+  document.getElementById('routeToggleLabel').textContent = state.mapShowRoute ? 'Hide route line' : 'Show route line';
+
+  let grat = '';
+  for(let lng=-180; lng<=180; lng+=30){ grat += `<line class="wm-grat" x1="${wmX(lng)}" y1="0" x2="${wmX(lng)}" y2="${WM_H}"/>`; }
+  for(let lat=-60; lat<=60; lat+=30){ grat += `<line class="wm-grat" x1="0" y1="${wmY(lat)}" x2="${WM_W}" y2="${wmY(lat)}"/>`; }
+
+  const stopIds = state.stops.map(s=>s.cityId);
+  let route = '';
+  if(state.mapShowRoute && state.stops.length>1){
+    const pts = state.stops.map(s=>{ const c=cityById(s.cityId); return `${wmX(c.lng)},${wmY(c.lat)}`; }).join(' ');
+    route = `<polyline class="wm-route" points="${pts}"/>`;
+  }
+
+  let userMarks = '';
+  if(state.userLoc){
+    const ux = wmX(state.userLoc.lng), uy = wmY(state.userLoc.lat);
+    userMarks = `<circle class="wm-user-pulse" cx="${ux}" cy="${uy}" r="6"/><circle class="wm-user" cx="${ux}" cy="${uy}" r="5"/><text class="wm-city-label" x="${ux+9}" y="${uy+3}">YOU</text>`;
+    if(state.mapShowRoute){
+      state.stops.forEach(s=>{
+        const c = cityById(s.cityId);
+        userMarks += `<line class="wm-route" style="stroke:#2F6FED;opacity:0.35;" x1="${ux}" y1="${uy}" x2="${wmX(c.lng)}" y2="${wmY(c.lat)}"/>`;
+      });
+    }
+  }
+
+  const cityDots = CITIES.map(c=>{
+    const isStop = stopIds.includes(c.id);
+    const idx = stopIds.indexOf(c.id);
+    const cx = wmX(c.lng), cy = wmY(c.lat);
+    return `<g onclick="${isStop?'':'addCity(\''+c.id+'\')'}">
+      <circle class="${isStop?'wm-city-stop':'wm-city-other'}" cx="${cx}" cy="${cy}" r="${isStop?6:4}"/>
+      ${isStop?`<text class="wm-city-label" x="${cx}" y="${cy+3.5}" text-anchor="middle" style="fill:var(--paper);font-weight:600;">${idx+1}</text>`:''}
+      <text class="wm-city-label" x="${cx+8}" y="${cy-6}">${c.name}</text>
+    </g>`;
+  }).join('');
+
+  wrap.innerHTML = `<svg viewBox="0 0 ${WM_W} ${WM_H}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${WM_W}" height="${WM_H}" fill="var(--petrol)"/>
+    <image href="https://upload.wikimedia.org/wikipedia/commons/8/83/Equirectangular_projection_SW.jpg" x="0" y="0" width="${WM_W}" height="${WM_H}" preserveAspectRatio="none" style="opacity:0.5;" onerror="this.remove();"/>
+    <rect class="wm-bg-tint" width="${WM_W}" height="${WM_H}"/>
+    ${grat}
+    ${route}
+    ${cityDots}
+    ${userMarks}
+  </svg>`;
+}
+
+function renderJournalGallery(){
+  const el = document.getElementById('journalGallery');
+  if(!el) return;
+  if(!state.stops.length){
+    el.innerHTML = '';
+    el.insertAdjacentHTML('afterend', '');
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'grid';
+  const seen = new Set();
+  const stopsUnique = state.stops.filter(s=>{ if(seen.has(s.cityId)) return false; seen.add(s.cityId); return true; });
+  el.innerHTML = stopsUnique.map(s=>{
+    const c = cityById(s.cityId);
+    return `<figure><img src="${cityImg(c)}" alt="${c.name}, ${c.country}" loading="lazy"><figcaption>${c.name}, ${c.country}</figcaption></figure>`;
+  }).join('');
+}
+
+let rightNowTimer = null;
+function renderRightNow(){
+  const strip = document.getElementById('rightNowStrip'); if(!strip) return;
+  const clockTag = document.getElementById('rightNowClock');
+  if(clockTag) clockTag.textContent = 'updates live';
+
+  const rows = [];
+  if(state.userLoc){
+    rows.push({ name:'You, right now', color:'#2F6FED', time: new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}), golden:'', badge:'your device' });
+  }
+  state.stops.forEach(s=>{
+    const c = cityById(s.cityId);
+    const now = cityNow(c);
+    const st = sunTimes(c.lat, c.lng, now);
+    let golden = '—';
+    if(!st.polarNight && !st.midnightSun){
+      const goldenEveningStart = st.sunsetUTC - 1;
+      golden = `sunset ${utcHourToLocalClock(st.sunsetUTC, c.utc, now)} · golden hour from ${utcHourToLocalClock(goldenEveningStart, c.utc, now)}`;
+    } else if(st.midnightSun){ golden = 'midnight sun today'; }
+    else { golden = 'polar night today'; }
+    rows.push({ name:`${c.name}, ${c.country}`, color:c.color, time: fmtClock(now), golden, badge:`UTC${c.utc>=0?'+':''}${c.utc}` });
+  });
+
+  strip.innerHTML = rows.length ? rows.map(r=>`
+    <div class="clock-row">
+      <div class="cdot" style="background:${r.color};"></div>
+      <div class="cname">${r.name}</div>
+      <div class="ctime">${r.time}</div>
+      <div class="cgolden">${r.golden}</div>
+      <div class="cbadge">${r.badge}</div>
+    </div>`).join('') : '<div class="empty-note">Add a stop to see its local time and golden hour here.</div>';
+
+  if(!rightNowTimer){ rightNowTimer = setInterval(renderRightNow, 30000); }
+}
+
+function renderNearYou(){
+  const serCard = document.getElementById('serendipityCard');
+  const nearCard = document.getElementById('nearYouCard');
+  if(!serCard || !nearCard) return;
+
+  if(!state.userLoc){
+    serCard.innerHTML = `<div class="serendipity-empty">Share your location and, if you have an upcoming stop, GlobeTrotter will scan the great-circle line between where you are and where you're headed — then suggest a real stopover city near that midpoint. It's a layover idea no itinerary tool thinks to offer.</div>`;
+    nearCard.innerHTML = `<div class="serendipity-empty">Share your location to see which of these nine cities is closest to you right now.</div>`;
+    return;
+  }
+
+  const withDist = CITIES.map(c=>({ c, km: haversineKm(state.userLoc, {lat:c.lat,lng:c.lng}) })).sort((a,b)=>a.km-b.km);
+  nearCard.innerHTML = withDist.slice(0,6).map(({c,km})=>`
+    <div class="nearyou-row">
+      <div style="width:8px;height:8px;border-radius:50%;background:${c.color};flex-shrink:0;"></div>
+      <div class="nn">${c.name}, ${c.country}</div>
+      <div class="nd">${Math.round(km).toLocaleString()} km</div>
+      <button class="mini-btn" style="padding:5px 10px;font-size:0.76rem;" onclick="addCity('${c.id}')">+ Add</button>
+    </div>`).join('');
+
+  const upcoming = state.stops.find(s=> new Date(s.start+'T00:00:00') >= new Date(new Date().toDateString())) || state.stops[0];
+  if(!upcoming){
+    serCard.innerHTML = `<div class="serendipity-empty">Add a stop to your itinerary and this will suggest a real stopover city roughly halfway between you and it.</div>`;
+    return;
+  }
+  const destCity = cityById(upcoming.cityId);
+  const mid = midpoint(state.userLoc, {lat:destCity.lat,lng:destCity.lng});
+  const candidates = CITIES.filter(c=>c.id!==destCity.id).map(c=>({ c, km: haversineKm(mid, {lat:c.lat,lng:c.lng}) })).sort((a,b)=>a.km-b.km);
+  const pick = candidates[0];
+  const totalKm = haversineKm(state.userLoc, {lat:destCity.lat,lng:destCity.lng});
+  serCard.innerHTML = `
+    <div class="serendipity-pick">
+      <div class="sw" style="background-color:${pick.c.color};background-image:linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.5)), url('${cityImg(pick.c)}');"></div>
+      <div class="txt">
+        <b>${pick.c.name}, ${pick.c.country}</b>
+        <p>You're headed to <b>${destCity.name}</b> — ${Math.round(totalKm).toLocaleString()} km away. ${pick.c.name} sits closest to the halfway point of that route (${Math.round(pick.km).toLocaleString()} km from the midpoint), which makes it a genuinely well-placed place to break up the journey, not just a random suggestion.</p>
+      </div>
+      <button class="add-btn" onclick="addCity('${pick.c.id}')">+ Add stopover</button>
+    </div>`;
+}
+
+/* ---------------- JET LAG PLANNER ----------------
+   Estimates recovery time between consecutive stops from their UTC offsets.
+   Eastward shifts (clocks jump forward) are harder on the body than
+   westward ones, so the two directions recover at different rates —
+   a distinction almost no trip planner encodes at all. */
+function jetlagDelta(prevUtc, curUtc){
+  let d = curUtc - prevUtc;
+  d = ((d + 12) % 24 + 24) % 24 - 12; // normalize to -12..12
+  return d;
+}
+function renderJetLag(){
+  const card = document.getElementById('jetlagCard'); if(!card) return;
+  if(state.stops.length<2){
+    card.innerHTML = `<div class="serendipity-empty">Add a second stop and I'll estimate how many days your body needs to adjust between each timezone.</div>`;
+    return;
+  }
+  let html = '';
+  for(let i=1;i<state.stops.length;i++){
+    const a = cityById(state.stops[i-1].cityId), b = cityById(state.stops[i].cityId);
+    const d = jetlagDelta(a.utc, b.utc);
+    const hours = Math.abs(d);
+    const recoveryDays = hours===0 ? 0 : Math.ceil(hours / (d>0 ? 1 : 1.5));
+    const pct = Math.min(100, hours/12*100);
+    const color = hours===0 ? 'var(--good)' : d>0 ? 'var(--coral)' : 'var(--gold)';
+    const dirTxt = hours===0 ? 'same time zone — no adjustment needed' : `${hours}h ${d>0?'ahead':'behind'} (${d>0?'eastbound, the harder direction':'westbound, easier to absorb'})`;
+    html += `<div class="jl-leg">
+      <div class="jl-leg-head"><span><b>${a.name}</b> → <b>${b.name}</b></span><span class="mono" style="font-size:0.8rem;color:#6A7A76;">${recoveryDays===0?'no shift':recoveryDays+' day'+(recoveryDays>1?'s':'')+' to adjust'}</span></div>
+      <div class="jl-bar-track"><div class="jl-bar-fill" style="width:${pct}%;background:${color};"></div></div>
+      <div class="jl-tip">${dirTxt}${recoveryDays>=2?` — consider keeping the first ${Math.min(recoveryDays,3)} day${recoveryDays>1?'s':''} in ${b.name} lighter on activities.`:''}</div>
+    </div>`;
+  }
+  card.innerHTML = html;
+}
+
+/* ---------------- CARBON & DISTANCE ---------------- */
+function tripCarbon(){
+  let totalKm = 0; const legs = [];
+  for(let i=1;i<state.stops.length;i++){
+    const a = cityById(state.stops[i-1].cityId), b = cityById(state.stops[i].cityId);
+    const km = haversineKm({lat:a.lat,lng:a.lng},{lat:b.lat,lng:b.lng});
+    totalKm += km;
+    legs.push({a, b, km});
+  }
+  return { totalKm, kg: totalKm*0.115, legs };
+}
+function renderCarbon(){
+  const card = document.getElementById('carbonCard'); if(!card) return;
+  if(state.stops.length<2){
+    card.innerHTML = `<div class="serendipity-empty">Add at least two stops to see the flight distance and a rough emissions estimate for the route.</div>`;
+    return;
+  }
+  const { totalKm, kg, legs } = tripCarbon();
+  const trees = Math.round(kg/21);
+  card.innerHTML = legs.map(l=>`
+    <div class="cb-leg"><span>${l.a.name} → ${l.b.name}</span><span class="km">${Math.round(l.km).toLocaleString()} km</span></div>
+  `).join('') + `
+    <div class="cb-total">
+      <span>Estimated flight emissions</span>
+      <b>${Math.round(kg).toLocaleString()} kg CO₂</b>
+    </div>
+    <div class="cb-note">≈ what ${trees} mature tree${trees===1?'':'s'} would absorb in a year. Rough economy-class estimate (~115g CO₂/km) for a general sense of scale, not a certified calculator.</div>
+  `;
+}
+
+/* ---------------- SMARTER ORDER (route optimizer) ---------------- */
+function computeRouteKm(cityIds){
+  let total = 0;
+  for(let i=1;i<cityIds.length;i++){
+    const a = cityById(cityIds[i-1]), b = cityById(cityIds[i]);
+    total += haversineKm({lat:a.lat,lng:a.lng},{lat:b.lat,lng:b.lng});
+  }
+  return total;
+}
+function permutations(arr){
+  if(arr.length<=1) return [arr];
+  const out = [];
+  arr.forEach((item, i)=>{
+    const rest = arr.slice(0,i).concat(arr.slice(i+1));
+    permutations(rest).forEach(p=> out.push([item, ...p]));
+  });
+  return out;
+}
+function bestRouteOrder(){
+  const ids = state.stops.map(s=>s.cityId);
+  if(ids.length<3 || ids.length>7) return null;
+  let best = { order: ids, km: computeRouteKm(ids) };
+  permutations(ids).forEach(order=>{
+    const km = computeRouteKm(order);
+    if(km < best.km) best = { order, km };
+  });
+  return best;
+}
+function renderRouteOptimizer(){
+  const card = document.getElementById('routeOptCard'); if(!card) return;
+  if(state.stops.length<3){
+    card.innerHTML = `<div class="serendipity-empty">Add a third stop and I'll check whether visiting the same cities in a different order would shorten your total travel distance.</div>`;
+    return;
+  }
+  if(state.stops.length>7){
+    card.innerHTML = `<div class="serendipity-empty">With ${state.stops.length} stops there are too many orderings to check instantly — this works best for trips of 3–7 cities.</div>`;
+    return;
+  }
+  const currentIds = state.stops.map(s=>s.cityId);
+  const currentKm = computeRouteKm(currentIds);
+  const best = bestRouteOrder();
+  const savings = currentKm - best.km;
+  const savingsPct = currentKm>0 ? (savings/currentKm*100) : 0;
+
+  if(!best || savings < Math.max(50, currentKm*0.03)){
+    card.innerHTML = `
+      <div class="ro-stat-row">
+        <div class="ro-stat"><div class="lbl">Current route</div><div class="val">${Math.round(currentKm).toLocaleString()} km</div></div>
+      </div>
+      <div class="serendipity-empty">Your current order is already close to the shortest possible route between these cities — nice routing.</div>`;
+    return;
+  }
+  const orderTxt = best.order.map(id=>cityById(id).name).join('<span class="arrow">→</span>');
+  card.innerHTML = `
+    <div class="ro-stat-row">
+      <div class="ro-stat"><div class="lbl">Current route</div><div class="val">${Math.round(currentKm).toLocaleString()} km</div></div>
+      <div class="ro-stat"><div class="lbl">Shortest possible</div><div class="val" style="color:var(--good);">${Math.round(best.km).toLocaleString()} km</div></div>
+      <div class="ro-stat"><div class="lbl">You'd save</div><div class="val" style="color:var(--coral-2);">${Math.round(savingsPct)}%</div></div>
+    </div>
+    <div class="ro-order">${orderTxt}</div>
+    <button class="add-btn" onclick="applyRouteOrder()">Reorder my itinerary this way →</button>
+    <div class="cb-note" style="margin-top:10px;">Dates carry over — each city keeps its original number of nights, just chained in the new order starting from your trip's original start date.</div>
+  `;
+}
+function applyRouteOrder(){
+  const best = bestRouteOrder();
+  if(!best) return;
+  const byCity = {};
+  state.stops.forEach(s=>{ byCity[s.cityId] = s; });
+  let cursor = state.stops[0].start;
+  const reordered = best.order.map(id=>{
+    const orig = byCity[id];
+    const n = nights(orig.start, orig.end);
+    const start = cursor;
+    const end = addDays(start, n);
+    cursor = end;
+    return { ...orig, start, end };
+  });
+  state.stops = reordered;
+  toast('Itinerary reordered for a shorter route');
+  renderAll();
+}
+
+/* ---------------- RENDER: PACKING LIST ---------------- */
+function addPackingItem(){
+  const input = document.getElementById('packInput'); if(!input) return;
+  const text = input.value.trim();
+  if(!text) return;
+  state.packing.push({id:'p'+Date.now(), text, done:false});
+  input.value = '';
+  renderPacking();
+}
+function togglePackingItem(id){
+  const it = state.packing.find(p=>p.id===id); if(!it) return;
+  it.done = !it.done;
+  renderPacking();
+}
+function removePackingItem(id){
+  state.packing = state.packing.filter(p=>p.id!==id);
+  renderPacking();
+}
+function renderPacking(){
+  const list = document.getElementById('packList'); if(!list) return;
+  const done = state.packing.filter(p=>p.done).length;
+  document.getElementById('packMeta').textContent = state.packing.length ? `${done} of ${state.packing.length} packed` : 'Nothing on the list yet';
+  list.innerHTML = state.packing.length ? state.packing.map(it=>`
+    <div class="act-row" style="cursor:pointer;" onclick="togglePackingItem('${it.id}')">
+      <span class="an" style="${it.done?'text-decoration:line-through;color:#8A968F;':''}">${it.done?'☑':'☐'}&nbsp; ${escapeHtml(it.text)}</span>
+      <span class="ac"><button class="icon-btn" style="width:24px;height:24px;" onclick="event.stopPropagation();removePackingItem('${it.id}')">✕</button></span>
+    </div>`).join('') : '<div class="empty-note">Add your first item above.</div>';
+}
+
+/* ---------------- RENDER: PROFILE ---------------- */
+function renderProfile(){
+  const nameEl = document.getElementById('profileName'); if(!nameEl) return;
+  const initial = (state.user.name||'?').trim().charAt(0).toUpperCase() || '?';
+  document.getElementById('profileAvatar').textContent = initial;
+  nameEl.textContent = state.user.name || 'Guest';
+  document.getElementById('profileEmail').textContent = state.user.email || 'No email on file (guest session)';
+  document.getElementById('profStops').textContent = state.stops.length;
+  document.getElementById('profFavs').textContent = state.favorites.length;
+  document.getElementById('profChats').textContent = state.chat.filter(m=>m.role==='user').length;
+  const nameInput = document.getElementById('profileNameInput');
+  if(nameInput && document.activeElement!==nameInput) nameInput.value = state.user.name;
+}
+function saveProfileName(){
+  const val = document.getElementById('profileNameInput').value.trim();
+  if(!val) return;
+  state.user.name = val;
+  renderAuthArea();
+  renderProfile();
+  toast('Name updated');
+}
+
+/* ---------------- TOAST ---------------- */
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ---------------- RENDER ALL ---------------- */
+function renderAll(){
+  renderDashboard();
+  renderDiscover();
+  renderItinerary();
+  renderBudget();
+  renderCalendar();
+  renderShare();
+  renderFavorites();
+  renderChat();
+  renderAuthArea();
+  renderWizard();
+  renderPacking();
+  renderProfile();
+  renderWorldMap();
+  renderRightNow();
+  renderNearYou();
+  renderJetLag();
+  renderCarbon();
+  renderRouteOptimizer();
+  renderJournalGallery();
+  updateGlobeMarkers();
+}
+/* ---------------- 3D GLOBE ---------------- */
+const GLOBE_R = 100;
+let globe3d = {
+  ready:false, scene:null, camera:null, renderer:null, controls:null,
+  markerGroup:null, raf:null, selectedId:null, resumeTimer:null
+};
+
+function latLngToVector3(lat, lng, radius){
+  const phi = (90-lat) * (Math.PI/180);
+  const theta = (lng+180) * (Math.PI/180);
+  return new THREE.Vector3(
+    -radius * Math.sin(phi) * Math.cos(theta),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+function estimateFlightCost(km){
+  if(km < 1) return 0;
+  const cost = 55 + km * 0.115;
+  return Math.round(cost/5)*5;
+}
+
+/* Reference point for globe distance/cost: user's shared location first, else the trip's first stop */
+function globeReference(){
+  if(state.userLoc){ return { lat: state.userLoc.lat, lng: state.userLoc.lng, label: 'you' }; }
+  if(state.stops.length){ const c = cityById(state.stops[0].cityId); return { lat:c.lat, lng:c.lng, label: c.name }; }
+  return null;
+}
+
+function initGlobe(){
+  const stage = document.getElementById('globeStage');
+  if(!stage || globe3d.ready) return;
+  if(typeof THREE==='undefined' || typeof THREE.OrbitControls==='undefined'){
+    const loading = document.getElementById('globeLoading');
+    if(loading) loading.textContent = "Couldn't load the 3D globe (no connection to the 3D library) — the flat map below still works.";
+    return;
+  }
+  const w = stage.clientWidth || 600, h = stage.clientHeight || 460;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 2000);
+  camera.position.set(0, 0, 260);
+
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+  renderer.setSize(w, h);
+  document.getElementById('globeLoading')?.remove();
+  stage.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+  const sun = new THREE.DirectionalLight(0xfff3df, 0.9);
+  sun.position.set(140, 90, 180);
+  scene.add(sun);
+
+  const loader = new THREE.TextureLoader();
+  loader.crossOrigin = 'anonymous';
+  const texture = loader.load('https://upload.wikimedia.org/wikipedia/commons/8/83/Equirectangular_projection_SW.jpg');
+  const geo = new THREE.SphereGeometry(GLOBE_R, 64, 64);
+  const mat = new THREE.MeshPhongMaterial({ map:texture, shininess:5 });
+  const globeMesh = new THREE.Mesh(geo, mat);
+  scene.add(globeMesh);
+
+  // soft atmosphere glow
+  const glowGeo = new THREE.SphereGeometry(GLOBE_R*1.04, 48, 48);
+  const glowMat = new THREE.MeshBasicMaterial({ color:0x6fd8c9, transparent:true, opacity:0.08, side:THREE.BackSide });
+  scene.add(new THREE.Mesh(glowGeo, glowMat));
+
+  const markerGroup = new THREE.Group();
+  scene.add(markerGroup);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enablePan = false;
+  controls.minDistance = 140;
+  controls.maxDistance = 420;
+  controls.rotateSpeed = 0.5;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.55;
+  controls.addEventListener('start', ()=>{
+    controls.autoRotate = false;
+    clearTimeout(globe3d.resumeTimer);
+  });
+  controls.addEventListener('end', ()=>{
+    clearTimeout(globe3d.resumeTimer);
+    globe3d.resumeTimer = setTimeout(()=>{ controls.autoRotate = true; }, 3500);
+  });
+
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  let downPos = null;
+
+  renderer.domElement.addEventListener('pointerdown', (e)=>{ downPos = {x:e.clientX, y:e.clientY}; });
+  renderer.domElement.addEventListener('pointermove', (e)=>{
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX-rect.left)/rect.width)*2-1;
+    mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(markerGroup.children);
+    renderer.domElement.style.cursor = hits.length ? 'pointer' : 'grab';
+  });
+  renderer.domElement.addEventListener('pointerup', (e)=>{
+    if(!downPos) return;
+    const moved = Math.hypot(e.clientX-downPos.x, e.clientY-downPos.y);
+    downPos = null;
+    if(moved > 5) return; // it was a drag, not a click
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX-rect.left)/rect.width)*2-1;
+    mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(markerGroup.children);
+    if(hits.length){ onGlobeMarkerClick(hits[0].object.userData.cityId); }
+  });
+
+  function animate(){
+    globe3d.raf = requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  globe3d = { ...globe3d, ready:true, scene, camera, renderer, controls, markerGroup };
+  window.addEventListener('resize', onGlobeStageResize);
+  updateGlobeMarkers();
+}
+
+function onGlobeStageResize(){
+  if(!globe3d.ready) return;
+  const stage = document.getElementById('globeStage');
+  if(!stage) return;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  if(!w || !h) return;
+  globe3d.camera.aspect = w/h;
+  globe3d.camera.updateProjectionMatrix();
+  globe3d.renderer.setSize(w, h);
+}
+
+function makeMarkerSphere(color, radius){
+  const g = new THREE.SphereGeometry(radius, 16, 16);
+  const m = new THREE.MeshBasicMaterial({ color });
+  return new THREE.Mesh(g, m);
+}
+
+function updateGlobeMarkers(){
+  if(!globe3d.ready) return;
+  const group = globe3d.markerGroup;
+  while(group.children.length) group.remove(group.children[0]);
+
+  const stopIds = state.stops.map(s=>s.cityId);
+  const ref = globeReference();
+
+  CITIES.forEach(c=>{
+    const isStop = stopIds.includes(c.id);
+    const marker = makeMarkerSphere(isStop ? 0xF0693F : 0xC9A25C, isStop ? 2.6 : 1.9);
+    const pos = latLngToVector3(c.lat, c.lng, GLOBE_R + 1.5);
+    marker.position.copy(pos);
+    marker.userData.cityId = c.id;
+    group.add(marker);
+  });
+
+  if(state.userLoc){
+    const marker = makeMarkerSphere(0x2F6FED, 2.8);
+    marker.position.copy(latLngToVector3(state.userLoc.lat, state.userLoc.lng, GLOBE_R + 1.5));
+    marker.userData.cityId = null;
+    group.add(marker);
+  }
+
+  const label = document.getElementById('globeRefLabel');
+  if(label) label.textContent = ref ? (ref.label==='you' ? 'you' : ref.label) : 'add a stop or share your location';
+}
+
+function onGlobeMarkerClick(cityId){
+  if(!cityId) return;
+  const c = cityById(cityId);
+  if(!c) return;
+  globe3d.selectedId = cityId;
+  const ref = globeReference();
+  const panel = document.getElementById('globePanel');
+  document.getElementById('gpName').textContent = c.name;
+  document.getElementById('gpCountry').textContent = c.country;
+
+  if(ref){
+    const km = haversineKm(ref, {lat:c.lat, lng:c.lng});
+    document.getElementById('gpDistance').textContent = Math.round(km).toLocaleString()+' km';
+    document.getElementById('gpCost').textContent = km<1 ? '—' : '~ '+money(estimateFlightCost(km));
+  } else {
+    document.getElementById('gpDistance').textContent = '—';
+    document.getElementById('gpCost').textContent = '—';
+  }
+  const stopIds = state.stops.map(s=>s.cityId);
+  const addBtn = document.getElementById('gpAddBtn');
+  if(stopIds.includes(cityId)){ addBtn.textContent = 'Already in your trip'; addBtn.disabled = true; addBtn.style.opacity='0.55'; }
+  else { addBtn.textContent = 'Add to itinerary'; addBtn.disabled = false; addBtn.style.opacity='1'; }
+  panel.classList.add('show');
+}
+function closeGlobePanel(){ document.getElementById('globePanel').classList.remove('show'); }
+function addCityFromGlobe(){
+  if(!globe3d.selectedId) return;
+  addCity(globe3d.selectedId);
+  onGlobeMarkerClick(globe3d.selectedId);
+  updateGlobeMarkers();
+}
+
+/* ---- Globe search: find a place, spin the globe to it, show distance & cost ---- */
+function onGlobeSearchInput(q){
+  const box = document.getElementById('globeSearchResults');
+  if(!box) return;
+  const query = q.trim().toLowerCase();
+  if(!query){ box.classList.remove('show'); box.innerHTML=''; return; }
+  const matches = CITIES.filter(c=>
+    c.name.toLowerCase().includes(query) || c.country.toLowerCase().includes(query) || c.region.toLowerCase().includes(query)
+  ).slice(0,6);
+  box.innerHTML = matches.length ? matches.map(c=>`
+    <button type="button" class="gsr-item" onclick="selectGlobeSearchResult('${c.id}')">
+      <span class="gsr-dot" style="background:${c.color};"></span>${c.name}
+      <span class="gsr-sub">${c.country}</span>
+    </button>`).join('') : '<div class="gsr-empty">No matching place in GlobeTrotter\'s city list.</div>';
+  box.classList.add('show');
+}
+function onGlobeSearchEnter(){
+  const input = document.getElementById('globeSearchInput');
+  const query = (input?.value||'').trim().toLowerCase();
+  if(!query) return;
+  const match = CITIES.find(c=> c.name.toLowerCase().includes(query) || c.country.toLowerCase().includes(query));
+  if(match) selectGlobeSearchResult(match.id);
+  else toast("No matching place — try a city or country name");
+}
+function selectGlobeSearchResult(cityId){
+  const c = cityById(cityId);
+  const input = document.getElementById('globeSearchInput');
+  const box = document.getElementById('globeSearchResults');
+  if(input) input.value = c ? c.name+', '+c.country : '';
+  if(box){ box.classList.remove('show'); box.innerHTML=''; }
+  if(!c) return;
+  if(!globe3d.ready){ toast('Globe is still loading — try again in a moment'); return; }
+  flyGlobeTo(c.lat, c.lng);
+  onGlobeMarkerClick(cityId);
+}
+document.addEventListener('click', (e)=>{
+  const wrap = document.getElementById('globeSearchWrap');
+  if(wrap && !wrap.contains(e.target)) document.getElementById('globeSearchResults')?.classList.remove('show');
+});
+
+/* Smoothly rotate the camera around the globe until the given lat/lng faces the viewer */
+function flyGlobeTo(lat, lng){
+  if(!globe3d.ready) return;
+  clearTimeout(globe3d.resumeTimer);
+  globe3d.controls.autoRotate = false;
+  const camera = globe3d.camera;
+  const dist = camera.position.length();
+  const targetPos = latLngToVector3(lat, lng, dist);
+  const startPos = camera.position.clone();
+  const startTime = performance.now();
+  const duration = 750;
+  function step(now){
+    const t = Math.min(1, (now-startTime)/duration);
+    const ease = 1 - Math.pow(1-t, 3);
+    camera.position.lerpVectors(startPos, targetPos, ease);
+    if(t < 1){ requestAnimationFrame(step); }
+    else {
+      globe3d.resumeTimer = setTimeout(()=>{ globe3d.controls.autoRotate = true; }, 4000);
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+setAuthMode('login');
+renderAll();
+</script>
+</body>
+</html>
